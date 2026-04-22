@@ -21,8 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       corredor_id: string;
     };
 
-    if (!pago_id || !corredor_id) {
-      return res.status(400).json({ error: "pago_id y corredor_id son requeridos" });
+    if (typeof pago_id !== "string" || !pago_id || typeof corredor_id !== "string" || !corredor_id) {
+      return res.status(400).json({ error: "pago_id y corredor_id deben ser strings no vacíos" });
     }
 
     const { data: pago, error: pagoErr } = await supabase
@@ -52,26 +52,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (txErr) {
-      console.warn("transacción duplicada al reconciliar:", txErr.message);
+      const isDuplicate = (txErr as { code?: string }).code === "23505";
+      if (!isDuplicate) {
+        return res.status(500).json({ error: "Error al registrar la transacción" });
+      }
+      // genuine duplicate — safe to continue
     }
 
     if (pago.fuente === "stripe") {
       const customer = (pago.payload as { customer?: string })?.customer;
       if (customer) {
-        await supabase
+        const { error: custUpdateErr } = await supabase
           .from("corredores")
           .update({ stripe_customer_id: customer })
           .eq("id", corredor_id);
+        if (custUpdateErr) console.error("No se pudo actualizar stripe_customer_id:", custUpdateErr);
       }
     } else if (pago.fuente === "paypal") {
       const payerId = (
         pago.payload as { resource?: { payer?: { payer_info?: { payer_id?: string } } } }
       )?.resource?.payer?.payer_info?.payer_id;
       if (payerId) {
-        await supabase
+        const { error: payerUpdateErr } = await supabase
           .from("corredores")
           .update({ paypal_payer_id: payerId })
           .eq("id", corredor_id);
+        if (payerUpdateErr) console.error("No se pudo actualizar paypal_payer_id:", payerUpdateErr);
       }
     }
 

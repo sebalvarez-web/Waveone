@@ -13,31 +13,49 @@ export function PagosSinAsignar({ corredores, onReconciliado }: PagosSinAsignarP
   const [asignando, setAsignando] = useState<string | null>(null);
   const [seleccion, setSeleccion] = useState<Record<string, string>>({});
 
-  const fetchPagos = async () => {
-    const res = await fetch("/api/pagos/sin-asignar");
-    const data = await res.json();
-    setPagos(Array.isArray(data) ? data : []);
-    setLoading(false);
+  const loadPagos = async (signal?: AbortSignal) => {
+    try {
+      const res = await fetch("/api/pagos/sin-asignar", signal ? { signal } : {});
+      if (!res.ok) throw new Error(res.statusText);
+      const data = await res.json();
+      setPagos(Array.isArray(data) ? data : []);
+    } catch (e) {
+      if ((e as { name?: string }).name !== "AbortError") {
+        toast.error("No se pudieron cargar los pagos pendientes");
+        setPagos([]);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchPagos(); }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    loadPagos(controller.signal);
+    return () => controller.abort();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleReconciliar = async (pagoId: string) => {
     const corredorId = seleccion[pagoId];
     if (!corredorId) { toast.error("Selecciona un corredor primero"); return; }
 
     setAsignando(pagoId);
-    const res = await fetch("/api/pagos/sin-asignar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pago_id: pagoId, corredor_id: corredorId }),
-    });
-
-    setAsignando(null);
-    if (!res.ok) { toast.error("Error al reconciliar el pago"); return; }
-    toast.success("Pago asignado correctamente");
-    fetchPagos();
-    onReconciliado();
+    try {
+      const res = await fetch("/api/pagos/sin-asignar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pago_id: pagoId, corredor_id: corredorId }),
+      });
+      if (!res.ok) { toast.error("Error al reconciliar el pago"); return; }
+      toast.success("Pago asignado correctamente");
+      loadPagos();
+      onReconciliado();
+    } catch {
+      toast.error("Error de conexión al reconciliar");
+    } finally {
+      setAsignando(null);
+    }
   };
 
   if (loading) {
