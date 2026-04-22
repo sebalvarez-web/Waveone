@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { Layout } from "@/components/layout/Layout";
 
@@ -11,7 +12,7 @@ export default function CorredorPerfilPage() {
       <Layout>
         <div className="mb-6">
           <nav className="flex items-center gap-2 text-label-caps text-outline mb-2 text-xs">
-            <a href="/corredores" className="hover:text-primary">CORREDORES</a>
+            <Link href="/corredores" className="hover:text-primary">CORREDORES</Link>
             <span className="material-symbols-outlined text-sm">chevron_right</span>
             <span className="text-on-surface">{query.id ?? "..."}</span>
           </nav>

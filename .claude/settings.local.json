@@ -11,7 +11,13 @@
       "Bash(npm install *)",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(xxd)",
+      "Bash(npx jest *)",
+      "Bash(git -C /Users/sebastianalvarez/projects/wave-one-dashboard add components/layout/ __tests__/components/Sidebar.test.tsx)",
+      "Bash(git -C /Users/sebastianalvarez/projects/wave-one-dashboard commit -m ' *)",
+      "Bash(npm run *)",
+      "Bash(node *)"
     ]
   }
 }
