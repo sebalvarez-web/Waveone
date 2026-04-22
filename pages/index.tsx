@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Link from "next/link";
 import { Layout } from "@/components/layout/Layout";
 import { TarjetaMetrica } from "@/components/finanzas/TarjetaMetrica";
 import { useMetricasDashboard } from "@/hooks/useMetricasDashboard";
@@ -100,9 +101,9 @@ export default function DashboardPage() {
             <h3 className="text-headline-md text-on-surface font-headline">
               Registros Financieros Recientes
             </h3>
-            <a href="/finanzas" className="text-primary text-sm font-semibold hover:underline">
+            <Link href="/finanzas" className="text-primary text-sm font-semibold hover:underline">
               Ver Todos los Registros
-            </a>
+            </Link>
           </div>
           <table className="w-full text-left">
             <thead>
