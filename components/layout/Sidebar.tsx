@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
 interface SidebarProps {
@@ -14,6 +15,14 @@ const navItems = [
 
 export function Sidebar({ pagosSinAsignar }: SidebarProps) {
   const { pathname } = useRouter();
+  const [sinAsignar, setSinAsignar] = useState(pagosSinAsignar);
+
+  useEffect(() => {
+    fetch("/api/pagos/sin-asignar")
+      .then((r) => r.json())
+      .then((data: unknown) => setSinAsignar(Array.isArray(data) ? (data as unknown[]).length : 0))
+      .catch(() => {});
+  }, []);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -46,9 +55,9 @@ export function Sidebar({ pagosSinAsignar }: SidebarProps) {
             >
               <span className="material-symbols-outlined mr-3">{item.icon}</span>
               <span className="text-sm">{item.label}</span>
-              {item.label === "Finanzas" && pagosSinAsignar > 0 && (
+              {item.label === "Finanzas" && sinAsignar > 0 && (
                 <span className="ml-auto bg-error text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                  {pagosSinAsignar}
+                  {sinAsignar}
                 </span>
               )}
             </Link>

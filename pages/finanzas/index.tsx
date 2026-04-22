@@ -5,6 +5,7 @@ import { FormGasto } from "@/components/finanzas/FormGasto";
 import { TablaTransacciones } from "@/components/finanzas/TablaTransacciones";
 import { useTransacciones } from "@/hooks/useTransacciones";
 import { useCorredores } from "@/hooks/useCorredores";
+import { PagosSinAsignar } from "@/components/pagos/PagosSinAsignar";
 
 export default function FinanzasPage() {
   const { transacciones, loading, refetch } = useTransacciones({ limit: 100 });
@@ -83,6 +84,13 @@ export default function FinanzasPage() {
             </section>
           </div>
         </div>
+
+        <section className="mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-headline-sm text-on-surface">Pagos Sin Asignar</h3>
+          </div>
+          <PagosSinAsignar corredores={corredores} onReconciliado={refetch} />
+        </section>
 
         <section className="mt-lg bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
           <div className="p-md border-b border-slate-100 flex justify-between items-center">

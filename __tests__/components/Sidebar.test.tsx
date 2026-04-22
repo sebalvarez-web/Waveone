@@ -6,6 +6,12 @@ jest.mock("next/router", () => ({
   useRouter: jest.fn(),
 }));
 
+beforeEach(() => {
+  global.fetch = jest.fn().mockResolvedValue({
+    json: jest.fn().mockResolvedValue([]),
+  }) as jest.Mock;
+});
+
 const mockUseRouter = useRouter as jest.Mock;
 
 describe("Sidebar", () => {
