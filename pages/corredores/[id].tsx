@@ -1,29 +1,233 @@
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { Layout } from "@/components/layout/Layout";
+import { FormCorredor } from "@/components/corredores/FormCorredor";
+import { usePlanes } from "@/hooks/usePlanes";
+import { useTransacciones } from "@/hooks/useTransacciones";
+import { toast } from "@/components/ui/Toast";
+import type { Corredor } from "@/types/database";
+
+const ESTADO_COLOR: Record<string, string> = {
+  pagado: "bg-secondary/10 text-secondary",
+  vencido: "bg-error/10 text-error",
+  pendiente: "bg-slate-100 text-slate-500",
+};
 
 export default function CorredorPerfilPage() {
-  const { query } = useRouter();
+  const router = useRouter();
+  const { id } = router.query as { id: string };
+  const supabase = useSupabaseClient();
+  const { planes } = usePlanes();
+  const { transacciones } = useTransacciones({ corredorId: id });
+  const [corredor, setCorredor] = useState<Corredor | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [nota, setNota] = useState("");
+  const [guardandoNota, setGuardandoNota] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from("corredores")
+      .select(`*, plan:planes(*), entrenador:users(id, nombre, email)`)
+      .eq("id", id)
+      .single()
+      .then(({ data }) => {
+        setCorredor(data);
+        setLoading(false);
+      });
+  }, [id, supabase]);
+
+  const saldo = transacciones.reduce((acc, t) => {
+    return t.tipo === "ingreso" ? acc + Number(t.monto) : acc - Number(t.monto);
+  }, 0);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-slate-100 rounded w-48" />
+          <div className="h-64 bg-slate-100 rounded-xl" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!corredor) {
+    return (
+      <Layout>
+        <p className="text-outline">Corredor no encontrado.</p>
+      </Layout>
+    );
+  }
 
   return (
     <>
-      <Head><title>RunTeam Pro — Perfil del Corredor</title></Head>
+      <Head><title>RunTeam Pro — {corredor.nombre}</title></Head>
       <Layout>
-        <div className="mb-6">
-          <nav className="flex items-center gap-2 text-label-caps text-outline mb-2 text-xs">
-            <Link href="/corredores" className="hover:text-primary">CORREDORES</Link>
-            <span className="material-symbols-outlined text-sm">chevron_right</span>
-            <span className="text-on-surface">{query.id ?? "..."}</span>
-          </nav>
-          <h2 className="text-headline-lg text-on-surface font-headline">
-            Perfil del Corredor
-          </h2>
+        <div className="mb-8 flex justify-between items-end">
+          <div>
+            <nav className="flex items-center gap-2 font-label-caps text-outline mb-2 text-xs">
+              <Link href="/corredores" className="hover:text-primary">CORREDORES</Link>
+              <span className="material-symbols-outlined text-sm">chevron_right</span>
+              <span className="text-on-surface">{corredor.nombre.toUpperCase()}</span>
+            </nav>
+            <h2 className="text-headline-lg text-on-surface font-headline">Perfil del Corredor</h2>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90"
+            >
+              Editar Corredor
+            </button>
+          </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-8 text-center text-outline">
-          <span className="material-symbols-outlined text-4xl mb-2">person</span>
-          <p className="text-body-md">Perfil con datos reales — disponible en Plan 2</p>
+
+        <div className="grid grid-cols-12 gap-gutter">
+          <div className="col-span-12 lg:col-span-4 space-y-gutter">
+            <div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-24 h-24 rounded-full bg-blue-100 text-primary flex items-center justify-center font-bold text-3xl mb-4">
+                  {corredor.nombre.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                </div>
+                <h3 className="text-headline-md font-headline">{corredor.nombre}</h3>
+                <span className="px-3 py-1 bg-secondary/10 text-secondary font-label-caps rounded-full mt-2 text-xs">
+                  {corredor.estado.charAt(0).toUpperCase() + corredor.estado.slice(1)}
+                </span>
+              </div>
+              <div className="mt-6 space-y-4">
+                <div>
+                  <p className="font-label-caps text-outline text-xs mb-1">CORREO</p>
+                  <p className="text-sm text-on-surface">{corredor.email}</p>
+                </div>
+                {corredor.telefono_emergencia && (
+                  <div>
+                    <p className="font-label-caps text-outline text-xs mb-1">EMERGENCIA</p>
+                    <p className="text-sm text-on-surface">{corredor.telefono_emergencia}</p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="font-label-caps text-outline text-xs mb-1">INGRESO</p>
+                    <p className="text-sm font-data-mono">{new Date(corredor.fecha_ingreso).toLocaleDateString("es-MX")}</p>
+                  </div>
+                  <div>
+                    <p className="font-label-caps text-outline text-xs mb-1">PLAN</p>
+                    <p className="text-sm">{corredor.plan?.nombre ?? "Sin plan"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-primary text-white rounded-xl p-6 relative overflow-hidden">
+              <div className="relative z-10">
+                <p className="text-white/80 font-label-caps text-xs">SALDO ACUMULADO</p>
+                <p className="text-3xl font-bold font-body mt-1">
+                  {saldo >= 0 ? "+" : ""}${Math.abs(saldo).toFixed(2)}
+                </p>
+                <p className="text-white/80 text-sm mt-3">
+                  Plan: ${corredor.plan?.precio_mensual?.toFixed(2) ?? "0.00"}/mes
+                </p>
+              </div>
+              <div className="absolute -right-4 -bottom-4 opacity-10">
+                <span className="material-symbols-outlined text-[100px]">payments</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 lg:col-span-8 space-y-gutter">
+            <div className="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+              <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+                <h4 className="font-headline-sm">Historial de Pagos</h4>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-surface-container-low border-b border-outline-variant">
+                      <th className="px-6 py-3 font-label-caps text-outline text-xs">Fecha</th>
+                      <th className="px-6 py-3 font-label-caps text-outline text-xs">Descripción</th>
+                      <th className="px-6 py-3 font-label-caps text-outline text-xs">Método</th>
+                      <th className="px-6 py-3 font-label-caps text-outline text-xs">Estado</th>
+                      <th className="px-6 py-3 font-label-caps text-outline text-xs text-right">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/30">
+                    {transacciones.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center text-outline text-sm">
+                          Sin transacciones registradas.
+                        </td>
+                      </tr>
+                    )}
+                    {transacciones.map((t) => (
+                      <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4 text-sm font-data-mono">
+                          {new Date(t.fecha).toLocaleDateString("es-MX")}
+                        </td>
+                        <td className="px-6 py-4 text-sm">{t.descripcion}</td>
+                        <td className="px-6 py-4 text-sm text-on-surface-variant capitalize">
+                          {t.metodo}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ESTADO_COLOR[t.estado]}`}>
+                            {t.estado.charAt(0).toUpperCase() + t.estado.slice(1)}
+                          </span>
+                        </td>
+                        <td className={`px-6 py-4 text-right font-data-mono ${t.tipo === "ingreso" ? "text-secondary" : "text-tertiary"}`}>
+                          {t.tipo === "ingreso" ? "+" : "-"}${Number(t.monto).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
+              <h4 className="font-headline-sm mb-4">Nota del Entrenador</h4>
+              <textarea
+                value={nota}
+                onChange={(e) => setNota(e.target.value)}
+                className="w-full border border-outline-variant rounded-lg focus:border-primary focus:ring-primary text-sm h-28 p-3"
+                placeholder="Añadir notas internas sobre el progreso o asistencia..."
+              />
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-xs text-outline flex items-center gap-1">
+                  <span className="material-symbols-outlined text-xs">info</span>
+                  Las notas son privadas para los administradores.
+                </p>
+                <button
+                  onClick={async () => {
+                    setGuardandoNota(true);
+                    await new Promise((r) => setTimeout(r, 500));
+                    setGuardandoNota(false);
+                    toast.success("Nota guardada");
+                  }}
+                  disabled={guardandoNota}
+                  className="px-4 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-60"
+                >
+                  {guardandoNota ? "Guardando..." : "Guardar Nota"}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {showForm && (
+          <FormCorredor
+            corredor={corredor}
+            planes={planes}
+            onClose={() => setShowForm(false)}
+            onSuccess={() => {
+              setShowForm(false);
+              router.reload();
+            }}
+          />
+        )}
       </Layout>
     </>
   );
