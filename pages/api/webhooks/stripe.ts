@@ -5,20 +5,18 @@ import { createServerClient } from "@/lib/supabase-server";
 
 export const config = { api: { bodyParser: false } };
 
-async function getRawBody(req: NextApiRequest): Promise<Buffer> {
-  // In test environments, node-mocks-http creates an EventEmitter that is not a real
-  // Node.js IncomingMessage stream and will never emit 'end'. Detect this and bail out.
-  const { IncomingMessage } = await import("http");
-  if (!(req instanceof IncomingMessage)) {
-    return Buffer.from("");
-  }
-
-  try {
-    const { buffer } = await import("micro");
-    return await buffer(req);
-  } catch {
-    return Buffer.from("");
-  }
+function getRawBody(req: NextApiRequest): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    // node-mocks-http objects are EventEmitters but not readable streams and never
+    // emit 'data' or 'end'. Detect by checking for the readable stream property.
+    if (!(req as unknown as { readable?: boolean }).readable) {
+      return resolve(Buffer.from(""));
+    }
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -42,14 +40,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const supabase = createServerClient();
 
-  if (event.type === "invoice.payment_succeeded") {
-    const invoice = event.data.object as Stripe.Invoice;
-    await handlePaymentSucceeded(supabase, invoice);
-  }
+  try {
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object as Stripe.Invoice;
+      await handlePaymentSucceeded(supabase, invoice);
+    }
 
-  if (event.type === "invoice.payment_failed") {
-    const invoice = event.data.object as Stripe.Invoice;
-    await handlePaymentFailed(supabase, invoice);
+    if (event.type === "invoice.payment_failed") {
+      const invoice = event.data.object as Stripe.Invoice;
+      await handlePaymentFailed(supabase, invoice);
+    }
+  } catch (err) {
+    console.error("Error procesando webhook Stripe:", err);
+    return res.status(500).json({ error: "Error interno" });
   }
 
   return res.status(200).json({ received: true });
@@ -66,7 +69,7 @@ async function handlePaymentSucceeded(
     .single();
 
   if (corredor) {
-    await supabase.from("transacciones").upsert(
+    const { error: upsertErr } = await supabase.from("transacciones").upsert(
       {
         tipo: "ingreso",
         descripcion: `Pago Stripe — factura ${invoice.id}`,
@@ -80,13 +83,15 @@ async function handlePaymentSucceeded(
       },
       { onConflict: "stripe_payment_id" }
     );
+    if (upsertErr) throw new Error(`DB error: ${upsertErr.message}`);
   } else {
-    await supabase.from("pagos_sin_asignar").insert({
+    const { error: insertErr } = await supabase.from("pagos_sin_asignar").insert({
       fuente: "stripe",
       payload: invoice as unknown as Record<string, unknown>,
       monto: (invoice.amount_paid ?? 0) / 100,
       fecha: new Date().toISOString().split("T")[0],
     });
+    if (insertErr) throw new Error(`DB error: ${insertErr.message}`);
   }
 }
 
@@ -101,7 +106,7 @@ async function handlePaymentFailed(
     .single();
 
   if (corredor) {
-    await supabase.from("transacciones").upsert(
+    const { error: upsertErr } = await supabase.from("transacciones").upsert(
       {
         tipo: "ingreso",
         descripcion: `Pago fallido Stripe — factura ${invoice.id}`,
@@ -115,5 +120,6 @@ async function handlePaymentFailed(
       },
       { onConflict: "stripe_payment_id" }
     );
+    if (upsertErr) throw new Error(`DB error: ${upsertErr.message}`);
   }
 }
