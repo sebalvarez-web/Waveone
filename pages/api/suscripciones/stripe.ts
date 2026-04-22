@@ -69,7 +69,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error("No se pudo persistir stripe_subscription_id:", updateSubErr);
     }
 
-    const invoice = subscription.latest_invoice;
+    const invoice = subscription.latest_invoice as
+      | { payment_intent?: { client_secret?: string | null } | string | null }
+      | string
+      | null;
     const clientSecret =
       invoice && typeof invoice !== "string" && invoice.payment_intent
         ? typeof invoice.payment_intent !== "string"
