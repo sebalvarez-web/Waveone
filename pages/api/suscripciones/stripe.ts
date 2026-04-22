@@ -45,10 +45,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         stripeCustomerId = newCustomer.id;
       }
 
-      await supabase
+      const { error: updateCustErr } = await supabase
         .from("corredores")
         .update({ stripe_customer_id: stripeCustomerId })
         .eq("id", corredor_id);
+      if (updateCustErr) {
+        console.error("No se pudo persistir stripe_customer_id:", updateCustErr);
+      }
     }
 
     const subscription = await stripe.subscriptions.create({
@@ -58,16 +61,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       expand: ["latest_invoice.payment_intent"],
     });
 
-    await supabase
+    const { error: updateSubErr } = await supabase
       .from("corredores")
       .update({ stripe_subscription_id: subscription.id })
       .eq("id", corredor_id);
+    if (updateSubErr) {
+      console.error("No se pudo persistir stripe_subscription_id:", updateSubErr);
+    }
+
+    const invoice = subscription.latest_invoice;
+    const clientSecret =
+      invoice && typeof invoice !== "string" && invoice.payment_intent
+        ? typeof invoice.payment_intent !== "string"
+          ? invoice.payment_intent.client_secret ?? null
+          : null
+        : null;
 
     return res.status(200).json({
       subscription_id: subscription.id,
-      client_secret:
-        (subscription.latest_invoice as { payment_intent?: { client_secret?: string } })
-          ?.payment_intent?.client_secret ?? null,
+      client_secret: clientSecret,
     });
   } catch (err) {
     console.error("Error al crear suscripción Stripe:", err);
