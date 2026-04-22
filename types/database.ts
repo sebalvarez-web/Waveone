@@ -1,0 +1,78 @@
+export type UserRol = "admin" | "entrenador";
+export type CorredorEstado = "activo" | "pausado" | "inactivo";
+export type TransaccionTipo = "ingreso" | "gasto";
+export type TransaccionMetodo = "stripe" | "paypal" | "transferencia" | "efectivo";
+export type TransaccionEstado = "pagado" | "pendiente" | "vencido";
+export type PagoFuente = "stripe" | "paypal";
+
+export interface User {
+  id: string;
+  email: string;
+  nombre: string;
+  rol: UserRol;
+  created_at: string;
+}
+
+export interface Plan {
+  id: string;
+  nombre: string;
+  precio_mensual: number;
+  descripcion: string;
+}
+
+export interface Corredor {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono_emergencia: string | null;
+  fecha_ingreso: string;
+  fecha_salida: string | null;
+  entrenador_id: string;
+  plan_id: string | null;
+  estado: CorredorEstado;
+  uniforme_entregado: boolean;
+  proxima_carrera: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  paypal_payer_id: string | null;
+  paypal_subscription_id: string | null;
+  created_at: string;
+  // joins opcionales
+  plan?: Plan;
+  entrenador?: User;
+}
+
+export interface Pausa {
+  id: string;
+  corredor_id: string;
+  mes: number;
+  año: number;
+  tarifa_mantenimiento: number;
+}
+
+export interface Transaccion {
+  id: string;
+  tipo: TransaccionTipo;
+  descripcion: string;
+  monto: number;
+  fecha: string;
+  categoria: string;
+  metodo: TransaccionMetodo;
+  estado: TransaccionEstado;
+  corredor_id: string | null;
+  stripe_payment_id: string | null;
+  paypal_order_id: string | null;
+  created_at: string;
+  // joins opcionales
+  corredor?: Pick<Corredor, "id" | "nombre">;
+}
+
+export interface PagoSinAsignar {
+  id: string;
+  fuente: PagoFuente;
+  payload: Record<string, unknown>;
+  monto: number;
+  fecha: string;
+  resuelto: boolean;
+  created_at: string;
+}
