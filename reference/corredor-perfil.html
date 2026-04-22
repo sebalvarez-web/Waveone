@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RunTeam Pro - Perfil del Corredor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "outline-variant": "#c4c6d1",
+          "inverse-primary": "#b7c4ff",
+          "surface-dim": "#dad9de",
+          "on-tertiary": "#ffffff",
+          "surface-variant": "#e3e2e7",
+          "on-primary": "#ffffff",
+          "primary-fixed": "#dce1ff",
+          "on-background": "#1a1b1f",
+          "secondary-fixed-dim": "#43e273",
+          error: "#ba1a1a",
+          "primary-container": "#001e68",
+          "surface-container": "#efedf2",
+          "surface-tint": "#002358",
+          secondary: "#006e2e",
+          "on-tertiary-container": "#ec6131",
+          "on-error": "#ffffff",
+          "inverse-surface": "#2f3034",
+          "on-tertiary-fixed": "#390b00",
+          "surface-container-highest": "#e3e2e7",
+          "on-surface-variant": "#44464f",
+          "surface-container-high": "#e9e7ed",
+          surface: "#faf8fe",
+          "inverse-on-surface": "#f1f0f5",
+          primary: "#002358",
+          "on-primary-container": "#7088e1",
+          "on-secondary": "#ffffff",
+          "tertiary-fixed": "#ffdbd0",
+          "surface-container-low": "#f4f3f8",
+          "tertiary-container": "#4b1200",
+          "on-error-container": "#93000a",
+          "on-primary-fixed-variant": "#264095",
+          "secondary-fixed": "#67ff8d",
+          tertiary: "#280600",
+          background: "#faf8fe",
+          "surface-bright": "#faf8fe",
+          "error-container": "#ffdad6",
+          "on-surface": "#1a1b1f",
+          "on-secondary-fixed-variant": "#005321",
+          "secondary-container": "#61fc89",
+          "surface-container-lowest": "#ffffff",
+          "tertiary-fixed-dim": "#ffb59d",
+          "primary-fixed-dim": "#b7c4ff",
+          "on-secondary-container": "#007230",
+          outline: "#747780",
+          "on-secondary-fixed": "#002109",
+          "on-primary-fixed": "#001551",
+          "on-tertiary-fixed-variant": "#842600"
+        },
+        borderRadius: {
+          DEFAULT: "0.25rem",
+          lg: "0.5rem",
+          xl: "0.75rem",
+          full: "9999px"
+        },
+        spacing: {
+          lg: "48px",
+          gutter: "24px",
+          sm: "12px",
+          base: "8px",
+          xs: "4px",
+          md: "24px",
+          "container-margin": "32px"
+        },
+        fontFamily: {
+          "headline-md": ["Lexend"],
+          "headline-sm": ["Lexend"],
+          "label-caps": ["Work Sans"],
+          "body-lg": ["Work Sans"],
+          "data-mono": ["Work Sans"],
+          "headline-lg": ["Lexend"],
+          "body-md": ["Work Sans"],
+          headline: ["Lexend"],
+          display: ["Lexend"],
+          body: ["Work Sans"],
+          label: ["Work Sans"]
+        },
+        fontSize: {
+          "headline-md": ["24px", {lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600"}],
+          "headline-sm": ["18px", {lineHeight: "24px", fontWeight: "500"}],
+          "label-caps": ["12px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600"}],
+          "body-lg": ["16px", {lineHeight: "24px", fontWeight: "400"}],
+          "data-mono": ["14px", {lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600"}],
+          "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "600"}],
+          "body-md": ["14px", {lineHeight: "20px", fontWeight: "400"}]
+        }
+      }
+    }
+  };
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  body { background-color: #f8f9fb; }
+</style>
+</head>
+<body class="font-body-md text-on-surface">
+
+<!-- Sidebar -->
+<aside class="fixed left-0 top-0 h-screen w-60 border-r border-slate-200 bg-white flex flex-col py-6 z-50">
+  <div class="px-6 mb-8">
+    <h1 class="text-xl font-bold text-primary font-headline-md tracking-tight">RunTeam Pro</h1>
+    <p class="text-xs text-slate-500">Gestión de Administración</p>
+  </div>
+  <nav class="flex-1 space-y-1">
+    <a class="flex items-center px-4 py-3 text-slate-500 hover:bg-slate-50 transition-colors" href="index.html">
+      <span class="material-symbols-outlined mr-3">dashboard</span>
+      <span class="tracking-tight">Tablero</span>
+    </a>
+    <a class="flex items-center px-4 py-3 text-primary bg-blue-50 border-r-4 border-primary font-semibold transition-colors" href="corredores.html">
+      <span class="material-symbols-outlined mr-3">directions_run</span>
+      <span class="tracking-tight">Corredores</span>
+    </a>
+    <a class="flex items-center px-4 py-3 text-slate-500 hover:bg-slate-50 transition-colors" href="finanzas.html">
+      <span class="material-symbols-outlined mr-3">payments</span>
+      <span class="tracking-tight">Finanzas</span>
+    </a>
+    <a class="flex items-center px-4 py-3 text-slate-500 hover:bg-slate-50 transition-colors" href="#">
+      <span class="material-symbols-outlined mr-3">settings</span>
+      <span class="tracking-tight">Configuración</span>
+    </a>
+  </nav>
+  <div class="px-4 mt-auto">
+    <button class="w-full py-3 bg-primary text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all">
+      <span class="material-symbols-outlined">add</span>
+      Añadir Corredor
+    </button>
+  </div>
+</aside>
+
+<!-- TopBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-240px)] h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 z-40 flex justify-between items-center px-8">
+  <div class="flex items-center bg-surface-container-low px-4 py-1.5 rounded-full w-96 border border-outline-variant/30">
+    <span class="material-symbols-outlined text-outline">search</span>
+    <input class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2" placeholder="Buscar corredores, planes o facturas..." type="text"/>
+  </div>
+  <div class="flex items-center gap-4">
+    <button class="hover:bg-slate-100 rounded-full p-2 transition-all">
+      <span class="material-symbols-outlined text-slate-500">notifications</span>
+    </button>
+    <button class="hover:bg-slate-100 rounded-full p-2 transition-all">
+      <span class="material-symbols-outlined text-slate-500">help_outline</span>
+    </button>
+    <div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
+      <img alt="Perfil del administrador" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR1HCIfkRzE6XII68aVLhs5Jv9qa7JQcWAxCZkFlIAZxAKwcXrBSI9lZ54SMrOG-OENULU-hcGNpyDlFcfdbhYC6mt5aLzpO477wbld9f35gLuHSOlzR6tEZdNLcclQjNDe9pT5bU2xaRvrhgA7SzVrWBp2i2SD92E_VOIsbkJaI45BAg142GC3lQKWPlogn0TMZfbDKEq_LwnY4X5HLYQY-J6px7jvyADqHftLTAwRbz7I35CnWQT57NuYiipaizkeTtXYJHpsn0"/>
+    </div>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="ml-60 pt-16 p-8 min-h-screen">
+
+  <!-- Header -->
+  <div class="mb-8 flex justify-between items-end">
+    <div>
+      <nav class="flex items-center gap-2 font-label-caps text-outline mb-2 text-[12px]">
+        <a class="hover:text-primary" href="corredores.html">CORREDORES</a>
+        <span class="material-symbols-outlined text-sm">chevron_right</span>
+        <span class="text-on-surface">MARCUS RHOADES</span>
+      </nav>
+      <h2 class="font-headline-lg text-on-surface">Perfil del Corredor</h2>
+    </div>
+    <div class="flex gap-3">
+      <button class="px-4 py-2 border border-outline rounded-lg font-headline-sm text-sm hover:bg-surface-container transition-colors">Exportar Registro</button>
+      <button class="px-4 py-2 bg-primary text-white rounded-lg font-headline-sm text-sm shadow-sm hover:opacity-90">Guardar Cambios</button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-gutter">
+
+    <!-- Left Column: Profile & Financial Status -->
+    <div class="col-span-12 lg:col-span-4 space-y-gutter">
+
+      <!-- Profile Card -->
+      <div class="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
+        <div class="flex flex-col items-center text-center">
+          <div class="relative w-32 h-32 mb-4">
+            <img alt="Marcus Rhoades" class="w-32 h-32 rounded-full object-cover border-4 border-primary-fixed" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQDJlZUt1GvMRaPBj__ZBH4u_6uaVYTDR2Q7-cQZK1lB212y8K5sicEl4erjUPYHrJG91yv5CsRWbj9SoIleZln15Sxe6nbMeIwmVA9AZ6Xj1v5gDGYqTkqmEy0I_s39bPIoPizLG8y6pKSsiJ5NFchnzvPLU3wYlc8ZsC234U-eQTDrpAcGH1xV0hy4LD-m8h8hf_VJJydzVRMdBjmGl6iwzGlxYEDkHEQVNgnNFzN8UEurOlRR-Iv5V1GDzqol38oo_GQshv2ug"/>
+            <button class="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg">
+              <span class="material-symbols-outlined text-sm">edit</span>
+            </button>
+          </div>
+          <h3 class="font-headline-md">Marcus Rhoades</h3>
+          <span class="px-3 py-1 bg-secondary/10 text-secondary font-label-caps rounded-full mt-2 text-xs">Miembro Activo</span>
+        </div>
+        <div class="mt-8 space-y-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block font-label-caps text-outline mb-1 text-xs">Fecha de Ingreso</label>
+              <input class="w-full border-outline-variant rounded-lg focus:border-primary focus:ring-primary font-data-mono text-sm" type="date" value="2023-01-15"/>
+            </div>
+            <div>
+              <label class="block font-label-caps text-outline mb-1 text-xs">Fecha de Salida</label>
+              <input class="w-full border-outline-variant rounded-lg focus:border-primary focus:ring-primary font-data-mono text-sm" placeholder="En curso" type="date"/>
+            </div>
+          </div>
+          <div>
+            <label class="block font-label-caps text-outline mb-1 text-xs">Correo Electrónico</label>
+            <input class="w-full border-outline-variant rounded-lg focus:border-primary focus:ring-primary text-sm" type="email" value="m.rhoades@example.com"/>
+          </div>
+          <div>
+            <label class="block font-label-caps text-outline mb-1 text-xs">Contacto de Emergencia</label>
+            <input class="w-full border-outline-variant rounded-lg focus:border-primary focus:ring-primary text-sm" type="text" value="+1 (555) 012-3456"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Quick Status -->
+      <div class="bg-primary text-white rounded-xl p-6 shadow-sm overflow-hidden relative">
+        <div class="relative z-10">
+          <label class="text-white/80 font-label-caps text-xs">Saldo Actual</label>
+          <div class="font-headline-lg font-data-mono mt-1">$142.50</div>
+          <div class="flex items-center gap-2 mt-4 text-sm text-white/90">
+            <span class="material-symbols-outlined text-sm">trending_up</span>
+            <span>Próximo cobro: 1 sep 2024</span>
+          </div>
+        </div>
+        <div class="absolute -right-4 -bottom-4 opacity-10">
+          <span class="material-symbols-outlined text-[120px]">payments</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-span-12 lg:col-span-8 space-y-gutter">
+
+      <!-- Plan Management -->
+      <div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+          <h4 class="font-headline-sm">Gestión del Plan de Entrenamiento</h4>
+          <span class="text-sm text-outline">ID del Plan: PR-9942</span>
+        </div>
+        <div class="p-6">
+          <div class="grid md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+              <label class="block font-label-caps text-on-surface-variant text-xs">Plan de Entrenamiento Activo</label>
+              <div class="relative">
+                <select class="w-full appearance-none border-outline-variant rounded-lg py-3 px-4 focus:border-primary focus:ring-primary pr-10">
+                  <option>Performance Élite ($85.00/mes)</option>
+                  <option selected>Club Competitivo ($45.00/mes)</option>
+                  <option>Base de Resistencia ($25.00/mes)</option>
+                  <option>Desarrollo Juvenil ($15.00/mes)</option>
+                </select>
+                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
+              </div>
+              <div class="bg-surface-container-low rounded-lg border border-outline-variant/50 p-3">
+                <div class="flex justify-between items-center text-sm mb-2">
+                  <span class="text-on-surface-variant">Costo del Plan Anterior</span>
+                  <span class="font-data-mono">$45.00</span>
+                </div>
+                <div class="flex justify-between items-center text-sm font-semibold">
+                  <span class="text-primary">Impacto del Nuevo Plan</span>
+                  <span class="text-primary font-data-mono">+$40.00 / mes</span>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <label class="block font-label-caps text-on-surface-variant text-xs">Pausar Membresía (Año Sabático)</label>
+              <div class="grid grid-cols-3 gap-2">
+                <label class="flex flex-col items-center justify-center p-3 border border-outline-variant rounded-lg hover:bg-surface-container cursor-pointer transition-all">
+                  <input class="hidden peer" type="checkbox"/>
+                  <span class="text-xs font-semibold mb-1 text-outline peer-checked:text-primary">SEP</span>
+                  <div class="w-5 h-5 border-2 border-outline rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary">
+                    <span class="material-symbols-outlined text-white text-[12px] hidden peer-checked:block">check</span>
+                  </div>
+                </label>
+                <label class="flex flex-col items-center justify-center p-3 border border-outline-variant rounded-lg hover:bg-surface-container cursor-pointer transition-all">
+                  <input checked class="hidden peer" type="checkbox"/>
+                  <span class="text-xs font-semibold mb-1 text-outline peer-checked:text-primary">OCT</span>
+                  <div class="w-5 h-5 border-2 border-outline rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary">
+                    <span class="material-symbols-outlined text-white text-[12px] hidden peer-checked:block">check</span>
+                  </div>
+                </label>
+                <label class="flex flex-col items-center justify-center p-3 border border-outline-variant rounded-lg hover:bg-surface-container cursor-pointer transition-all">
+                  <input class="hidden peer" type="checkbox"/>
+                  <span class="text-xs font-semibold mb-1 text-outline peer-checked:text-primary">NOV</span>
+                  <div class="w-5 h-5 border-2 border-outline rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary">
+                    <span class="material-symbols-outlined text-white text-[12px] hidden peer-checked:block">check</span>
+                  </div>
+                </label>
+                <label class="flex flex-col items-center justify-center p-3 border border-outline-variant rounded-lg hover:bg-surface-container cursor-pointer transition-all">
+                  <input class="hidden peer" type="checkbox"/>
+                  <span class="text-xs font-semibold mb-1 text-outline peer-checked:text-primary">DIC</span>
+                  <div class="w-5 h-5 border-2 border-outline rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary">
+                    <span class="material-symbols-outlined text-white text-[12px] hidden peer-checked:block">check</span>
+                  </div>
+                </label>
+                <label class="flex flex-col items-center justify-center p-3 border border-outline-variant rounded-lg hover:bg-surface-container cursor-pointer transition-all">
+                  <input class="hidden peer" type="checkbox"/>
+                  <span class="text-xs font-semibold mb-1 text-outline peer-checked:text-primary">ENE</span>
+                  <div class="w-5 h-5 border-2 border-outline rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary">
+                    <span class="material-symbols-outlined text-white text-[12px] hidden peer-checked:block">check</span>
+                  </div>
+                </label>
+                <label class="flex flex-col items-center justify-center p-3 border border-outline-variant rounded-lg hover:bg-surface-container cursor-pointer transition-all">
+                  <input class="hidden peer" type="checkbox"/>
+                  <span class="text-xs font-semibold mb-1 text-outline peer-checked:text-primary">FEB</span>
+                  <div class="w-5 h-5 border-2 border-outline rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary">
+                    <span class="material-symbols-outlined text-white text-[12px] hidden peer-checked:block">check</span>
+                  </div>
+                </label>
+              </div>
+              <p class="text-[11px] text-outline leading-tight italic">Los meses pausados se facturarán a una tarifa de mantenimiento de $5.00/mes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment History -->
+      <div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+          <h4 class="font-headline-sm">Historial de Pagos</h4>
+          <button class="text-primary text-sm font-semibold flex items-center gap-1 hover:underline">
+            <span class="material-symbols-outlined text-sm">receipt_long</span>
+            Ver Todas las Facturas
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="bg-surface-container-low border-b border-outline-variant">
+                <th class="px-6 py-3 font-label-caps text-outline text-xs">Período de Facturación</th>
+                <th class="px-6 py-3 font-label-caps text-outline text-xs">Estado</th>
+                <th class="px-6 py-3 font-label-caps text-outline text-xs">Método</th>
+                <th class="px-6 py-3 font-label-caps text-outline text-xs text-right">Monto</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/30">
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 font-body-md">01 ago - 31 ago, 2024</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary">Pagado</span>
+                </td>
+                <td class="px-6 py-4 text-on-surface-variant flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">credit_card</span>
+                  <span class="font-data-mono">•••• 4242</span>
+                </td>
+                <td class="px-6 py-4 text-right font-data-mono">$45.00</td>
+              </tr>
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 font-body-md">01 jul - 31 jul, 2024</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary">Pagado</span>
+                </td>
+                <td class="px-6 py-4 text-on-surface-variant flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">credit_card</span>
+                  <span class="font-data-mono">•••• 4242</span>
+                </td>
+                <td class="px-6 py-4 text-right font-data-mono">$45.00</td>
+              </tr>
+              <tr class="hover:bg-slate-50 transition-colors bg-error/5">
+                <td class="px-6 py-4 font-body-md">01 jun - 30 jun, 2024</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error/10 text-error">Vencido</span>
+                </td>
+                <td class="px-6 py-4 text-on-surface-variant flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">credit_card</span>
+                  <span class="font-data-mono">•••• 4242</span>
+                </td>
+                <td class="px-6 py-4 text-right font-data-mono text-error font-bold">$45.00</td>
+              </tr>
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 font-body-md">01 may - 31 may, 2024</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary">Pagado</span>
+                </td>
+                <td class="px-6 py-4 text-on-surface-variant flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">payments</span>
+                  <span class="font-data-mono">Efectivo</span>
+                </td>
+                <td class="px-6 py-4 text-right font-data-mono">$45.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Notes & Messaging -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+        <div class="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
+          <h4 class="font-headline-sm mb-4">Nota del Entrenador</h4>
+          <textarea class="w-full border-outline-variant rounded-lg focus:border-primary focus:ring-primary text-sm h-32" placeholder="Añadir notas internas sobre el progreso del entrenamiento o asistencia..."></textarea>
+          <div class="mt-2 flex items-center gap-2 text-xs text-outline">
+            <span class="material-symbols-outlined text-xs">info</span>
+            <span>Las notas son privadas para los administradores.</span>
+          </div>
+        </div>
+        <div class="bg-surface-container-high rounded-xl p-6 flex flex-col justify-center border border-dashed border-outline text-center">
+          <span class="material-symbols-outlined text-primary mb-3 text-3xl">mail</span>
+          <h4 class="font-headline-sm text-on-surface">Enviar Mensaje Directo</h4>
+          <p class="text-sm text-outline mt-1 mb-4 px-4">Contactar a Marcus directamente sobre su membresía o calendario de entrenamiento.</p>
+          <button class="mx-auto px-6 py-2 bg-white border border-outline rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors shadow-sm">Redactar Correo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

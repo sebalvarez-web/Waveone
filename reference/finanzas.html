@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RunTeam Pro - Gestión Financiera</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "outline-variant": "#c3c6d6",
+          "inverse-primary": "#b2c5ff",
+          "surface-dim": "#d9dadc",
+          "on-tertiary": "#ffffff",
+          "surface-variant": "#e1e2e4",
+          "on-primary": "#ffffff",
+          "primary-fixed": "#dae2ff",
+          "on-background": "#191c1e",
+          "secondary-fixed-dim": "#3ce36a",
+          error: "#ba1a1a",
+          "primary-container": "#002358",
+          "surface-container": "#edeef0",
+          "surface-tint": "#002358",
+          secondary: "#006e2a",
+          "on-tertiary-container": "#ffc6b9",
+          "on-error": "#ffffff",
+          "inverse-surface": "#2e3132",
+          "on-tertiary-fixed": "#3c0700",
+          "surface-container-highest": "#e1e2e4",
+          "on-surface-variant": "#434654",
+          "surface-container-high": "#e7e8ea",
+          surface: "#f8f9fb",
+          "inverse-on-surface": "#f0f1f3",
+          primary: "#002358",
+          "on-primary-container": "#ffffff",
+          "on-secondary": "#ffffff",
+          "tertiary-fixed": "#ffdad2",
+          "surface-container-low": "#f3f4f6",
+          "tertiary-container": "#ae2700",
+          "on-error-container": "#93000a",
+          "on-primary-fixed-variant": "#002358",
+          "secondary-fixed": "#69ff87",
+          tertiary: "#841b00",
+          background: "#f8f9fb",
+          "surface-bright": "#f8f9fb",
+          "error-container": "#ffdad6",
+          "on-surface": "#191c1e",
+          "on-secondary-fixed-variant": "#00531e",
+          "secondary-container": "#5cfd80",
+          "surface-container-lowest": "#ffffff",
+          "tertiary-fixed-dim": "#ffb4a2",
+          "primary-fixed-dim": "#b2c5ff",
+          "on-secondary-container": "#00732c",
+          outline: "#737685",
+          "on-secondary-fixed": "#002108",
+          "on-primary-fixed": "#001848",
+          "on-tertiary-fixed-variant": "#8a1d00"
+        },
+        borderRadius: {
+          DEFAULT: "0.25rem",
+          lg: "0.5rem",
+          xl: "0.75rem",
+          full: "9999px"
+        },
+        spacing: {
+          lg: "48px",
+          gutter: "24px",
+          sm: "12px",
+          base: "8px",
+          xs: "4px",
+          md: "24px",
+          "container-margin": "32px"
+        },
+        fontFamily: {
+          "headline-md": ["Lexend"],
+          "headline-sm": ["Lexend"],
+          "label-caps": ["Work Sans"],
+          "body-lg": ["Work Sans"],
+          "data-mono": ["Work Sans"],
+          "headline-lg": ["Lexend"],
+          "body-md": ["Work Sans"],
+          lexend: ["Lexend"]
+        },
+        fontSize: {
+          "headline-md": ["24px", {lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600"}],
+          "headline-sm": ["18px", {lineHeight: "24px", fontWeight: "500"}],
+          "label-caps": ["12px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600"}],
+          "body-lg": ["16px", {lineHeight: "24px", fontWeight: "400"}],
+          "data-mono": ["14px", {lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600"}],
+          "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "600"}],
+          "body-md": ["14px", {lineHeight: "20px", fontWeight: "400"}]
+        }
+      }
+    }
+  };
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  body { background-color: #f8f9fb; color: #191c1e; }
+</style>
+</head>
+<body class="font-body-md">
+
+<!-- Sidebar -->
+<nav class="fixed left-0 top-0 h-screen w-60 border-r border-slate-200 bg-white z-50 flex flex-col py-6 font-lexend tracking-tight">
+  <div class="px-6 mb-8">
+    <h1 class="text-xl font-bold text-primary">RunTeam Pro</h1>
+    <p class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Administración</p>
+  </div>
+  <div class="flex-1 space-y-1">
+    <a class="flex items-center px-4 py-3 text-slate-500 hover:bg-slate-50 transition-colors" href="index.html">
+      <span class="material-symbols-outlined mr-3">dashboard</span>
+      <span class="font-medium">Panel</span>
+    </a>
+    <a class="flex items-center px-4 py-3 text-slate-500 hover:bg-slate-50 transition-colors" href="corredores.html">
+      <span class="material-symbols-outlined mr-3">directions_run</span>
+      <span class="font-medium">Corredores</span>
+    </a>
+    <a class="flex items-center px-4 py-3 text-primary bg-blue-50 border-r-4 border-primary font-semibold" href="finanzas.html">
+      <span class="material-symbols-outlined mr-3">payments</span>
+      <span>Finanzas</span>
+    </a>
+    <a class="flex items-center px-4 py-3 text-slate-500 hover:bg-slate-50 transition-colors" href="#">
+      <span class="material-symbols-outlined mr-3">settings</span>
+      <span class="font-medium">Configuración</span>
+    </a>
+  </div>
+  <div class="px-4 mt-auto">
+    <button class="w-full py-3 bg-primary text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-[0.98]">
+      <span class="material-symbols-outlined text-sm">add</span>
+      <span>Añadir Corredor</span>
+    </button>
+  </div>
+</nav>
+
+<!-- TopBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-240px)] h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md z-40 flex justify-between items-center px-8">
+  <div class="flex items-center bg-surface-container-low px-4 py-2 rounded-full w-96">
+    <span class="material-symbols-outlined text-slate-400 mr-2">search</span>
+    <input class="bg-transparent border-none focus:ring-0 text-sm w-full text-on-surface" placeholder="Buscar transacciones, atletas..." type="text"/>
+  </div>
+  <div class="flex items-center gap-4">
+    <button class="hover:bg-slate-100 rounded-full p-2 transition-all duration-200">
+      <span class="material-symbols-outlined text-slate-500">notifications</span>
+    </button>
+    <button class="hover:bg-slate-100 rounded-full p-2 transition-all duration-200">
+      <span class="material-symbols-outlined text-slate-500">help_outline</span>
+    </button>
+    <div class="h-8 w-8 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold text-xs border border-primary/20">
+      AD
+    </div>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="ml-60 pt-24 px-8 pb-12">
+
+  <!-- Header -->
+  <div class="flex justify-between items-end mb-8">
+    <div>
+      <h2 class="font-headline-lg text-on-background">Gestión Financiera</h2>
+      <p class="font-body-lg text-on-surface-variant">Realice un seguimiento del rendimiento de los ingresos y los costes operativos.</p>
+    </div>
+    <div class="flex gap-4">
+      <button class="px-6 py-2.5 rounded-lg border border-outline text-on-surface font-semibold flex items-center gap-2 hover:bg-white transition-all">
+        <span class="material-symbols-outlined text-lg">file_download</span>
+        Exportar Informe
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Bento -->
+  <div class="grid grid-cols-12 gap-gutter mb-lg">
+    <div class="col-span-12 md:col-span-4 bg-white p-md border border-slate-200 rounded-xl">
+      <p class="font-label-caps text-on-surface-variant mb-2">SALDO LÍQUIDO ACTUAL</p>
+      <div class="flex items-baseline gap-2 mb-4">
+        <span class="font-headline-lg text-primary">$42,890.50</span>
+        <span class="text-secondary font-data-mono flex items-center">
+          <span class="material-symbols-outlined text-sm mr-1">trending_up</span>
+          12%
+        </span>
+      </div>
+      <div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+        <div class="h-full bg-primary w-3/4 rounded-full"></div>
+      </div>
+      <p class="mt-2 text-[11px] text-slate-400 font-medium uppercase">Objetivo Tesorería: $60,000.00</p>
+    </div>
+    <div class="col-span-12 md:col-span-4 bg-white p-md border border-slate-200 rounded-xl">
+      <p class="font-label-caps text-on-surface-variant mb-2">ATRASOS TOTALES</p>
+      <div class="flex items-baseline gap-2 mb-4">
+        <span class="font-headline-lg text-tertiary">$3,240.00</span>
+        <span class="text-tertiary font-data-mono flex items-center">
+          <span class="material-symbols-outlined text-sm mr-1">warning</span>
+          8 Activos
+        </span>
+      </div>
+      <div class="flex gap-1">
+        <div class="h-2 w-1/3 bg-error rounded-sm"></div>
+        <div class="h-2 w-1/4 bg-error-container rounded-sm"></div>
+        <div class="h-2 w-12 bg-surface-container-high rounded-sm"></div>
+      </div>
+      <p class="mt-2 text-[11px] text-slate-400 font-medium tracking-tight uppercase">MÁS ATRASADO: PROGRAMA TRAIL ELITE</p>
+    </div>
+    <div class="col-span-12 md:col-span-4 bg-white p-md border border-slate-200 rounded-xl">
+      <p class="font-label-caps text-on-surface-variant mb-2">LIQUIDACIONES PENDIENTES</p>
+      <div class="flex items-baseline gap-2 mb-4">
+        <span class="font-headline-lg text-on-background">$12,105.00</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-1.5">
+          <div class="w-3 h-3 rounded-full bg-[#0070ba]"></div>
+          <span class="text-[11px] font-bold text-slate-500">PAYPAL</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <div class="w-3 h-3 rounded-full bg-[#635bff]"></div>
+          <span class="text-[11px] font-bold text-slate-500">STRIPE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-12 gap-gutter">
+
+    <!-- Left: Payments & Sync -->
+    <div class="col-span-12 lg:col-span-7 space-y-gutter">
+
+      <!-- Payment Gateway Sync -->
+      <section class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div class="p-md border-b border-slate-100 flex justify-between items-center">
+          <h3 class="font-headline-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">sync</span>
+            Integración de Pasarelas
+          </h3>
+          <span class="font-label-caps bg-secondary-container text-on-secondary-container px-2 py-1 rounded text-xs">2 CONECTADAS</span>
+        </div>
+        <div class="p-md grid grid-cols-2 gap-4">
+          <div class="border border-slate-200 rounded-lg p-4 flex flex-col items-center text-center hover:border-primary/40 transition-colors cursor-pointer">
+            <img alt="PayPal" class="h-6 mb-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeV9_63gT2pPNFel5JlAWZxUONCH0_322oUPzpkF8UcmWAXHLAmwbYG6SxHCJohm_s88MReRKxUFuSIFopizrsgo16t2B5VGcVgVOsZsk8FruMtEHR571qXlJA2LMjeaPYZqLofet-CE1_ILaWSSpVleH8f0eJCfYfM8Zao09b_I0L1pYe6FVzdTM5lNWsf_pkWS7U5Kki8V-CpJo5wYm7wrmiIGOyWlP1y9lrAvGJ0XCn0i81_zLlKskkmymJhiovXrpDjsCgw0"/>
+            <p class="font-body-md font-semibold mb-1">PayPal Business</p>
+            <p class="text-[12px] text-slate-400 mb-4">Última sinc: hace 2h</p>
+            <button class="w-full py-2 bg-surface-container text-on-surface-variant rounded font-semibold text-xs">RE-SINCRONIZAR</button>
+          </div>
+          <div class="border border-slate-200 rounded-lg p-4 flex flex-col items-center text-center hover:border-primary/40 transition-colors cursor-pointer">
+            <img alt="Stripe" class="h-6 mb-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZl8Q6bq6DOaKDOrqxDPRSqgmYsvHU9DjLZgLsIeZAAGYOYsv9hJ1JhGsExczQLERwKdAn3euyum8Us9vilMA7jfqX5DWzbgn_AjKEQN_zfGXnowCZnaX4_DxvlaKYjEWkV959gvD7jwdqT8V4B211WbVlnIx8fh5MyXPNIiB0ddKtUsJ2A5djkhSFnzxoYFP2s85-_GPkjh_-FteVX4DeThDD8eDrWNFu5YvmLKnXtNEOECvjbFw3PWvQ7aeUkW1tUx9EpwT5PZc"/>
+            <p class="font-body-md font-semibold mb-1">Stripe Connect</p>
+            <p class="text-[12px] text-slate-400 mb-4">Última sinc: hace 14m</p>
+            <button class="w-full py-2 bg-surface-container text-on-surface-variant rounded font-semibold text-xs">RE-SINCRONIZAR</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Manual Bank Transfer -->
+      <section class="bg-white border border-slate-200 rounded-xl">
+        <div class="p-md border-b border-slate-100">
+          <h3 class="font-headline-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">account_balance</span>
+            Entrada Bancaria Manual
+          </h3>
+        </div>
+        <form class="p-md space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="font-label-caps text-on-surface-variant block text-xs">ATLETA / PAGADOR</label>
+              <input class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md py-2.5" placeholder="Escriba el nombre..." type="text"/>
+            </div>
+            <div class="space-y-1">
+              <label class="font-label-caps text-on-surface-variant block text-xs">NÚMERO DE REFERENCIA</label>
+              <input class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md py-2.5" placeholder="TXN-90210" type="text"/>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div class="space-y-1">
+              <label class="font-label-caps text-on-surface-variant block text-xs">CANTIDAD</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                <input class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md py-2.5 pl-7" placeholder="0.00" type="number"/>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="font-label-caps text-on-surface-variant block text-xs">FECHA RECIBIDA</label>
+              <input class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md py-2.5" type="date"/>
+            </div>
+            <div class="space-y-1">
+              <label class="font-label-caps text-on-surface-variant block text-xs">ASIGNACIÓN</label>
+              <select class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md py-2.5">
+                <option>Cuota Mensual</option>
+                <option>Cuota de Competición</option>
+                <option>Kit de Equipamiento</option>
+              </select>
+            </div>
+          </div>
+          <button class="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:opacity-90 transition-all" type="submit">Registrar Pago</button>
+        </form>
+      </section>
+    </div>
+
+    <!-- Right: Expenses -->
+    <div class="col-span-12 lg:col-span-5 space-y-gutter">
+
+      <!-- Add Expense -->
+      <section class="bg-white border border-slate-200 rounded-xl">
+        <div class="p-md border-b border-slate-100">
+          <h3 class="font-headline-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-tertiary">receipt_long</span>
+            Añadir Gasto
+          </h3>
+        </div>
+        <div class="p-md space-y-4">
+          <div class="space-y-1">
+            <label class="font-label-caps text-on-surface-variant block text-xs">DESCRIPCIÓN</label>
+            <input class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md py-2" placeholder="ej., Alquiler de Pista - Estadio Local" type="text"/>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="font-label-caps text-on-surface-variant block text-xs">CATEGORÍA</label>
+              <select class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md py-2.5">
+                <option>Alquiler de Instalaciones</option>
+                <option>Equipamiento</option>
+                <option>Viaje y Alojamiento</option>
+                <option>Marketing</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label class="font-label-caps text-on-surface-variant block text-xs">CANTIDAD</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                <input class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md py-2.5 pl-7" placeholder="0.00" type="number"/>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <label class="font-label-caps text-on-surface-variant block text-xs">FECHA</label>
+            <input class="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md py-2.5" type="date"/>
+          </div>
+          <button class="w-full py-3 bg-tertiary text-white rounded-lg font-semibold hover:opacity-90 transition-all">Enviar Gasto</button>
+        </div>
+      </section>
+
+      <!-- Recent Expenses -->
+      <section class="bg-white border border-slate-200 rounded-xl">
+        <div class="p-md border-b border-slate-100 flex justify-between items-center">
+          <h3 class="font-headline-sm">Gastos Recientes</h3>
+          <a class="text-primary font-semibold text-xs hover:underline" href="#">Ver Todo</a>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <div class="p-md flex items-center justify-between hover:bg-slate-50 transition-colors">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-tertiary/10 text-tertiary flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">stadium</span>
+              </div>
+              <div>
+                <p class="font-body-md font-semibold">Alquiler de Pista - Julio</p>
+                <p class="text-[12px] text-slate-400">18 de Julio, 2024 • Instalaciones</p>
+              </div>
+            </div>
+            <span class="font-data-mono text-tertiary">-$450.00</span>
+          </div>
+          <div class="p-md flex items-center justify-between hover:bg-slate-50 transition-colors">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-tertiary/10 text-tertiary flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">sports_handball</span>
+              </div>
+              <div>
+                <p class="font-body-md font-semibold">Nuevos Testigos de Relevos (Set 10)</p>
+                <p class="text-[12px] text-slate-400">15 de Julio, 2024 • Equipamiento</p>
+              </div>
+            </div>
+            <span class="font-data-mono text-tertiary">-$125.40</span>
+          </div>
+          <div class="p-md flex items-center justify-between hover:bg-slate-50 transition-colors">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-tertiary/10 text-tertiary flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">campaign</span>
+              </div>
+              <div>
+                <p class="font-body-md font-semibold">Campaña Anuncios Facebook</p>
+                <p class="text-[12px] text-slate-400">12 de Julio, 2024 • Marketing</p>
+              </div>
+            </div>
+            <span class="font-data-mono text-tertiary">-$300.00</span>
+          </div>
+        </div>
+        <div class="p-md bg-surface-container-low rounded-b-xl border-t border-slate-100 flex justify-between items-center">
+          <span class="font-label-caps text-on-surface-variant">FLUJO DE SALIDA MENSUAL TOTAL</span>
+          <span class="font-headline-sm text-tertiary">$875.40</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Master Ledger -->
+  <section class="mt-lg bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <div class="p-md border-b border-slate-100 flex justify-between items-center">
+      <h3 class="font-headline-sm">Libro Maestro de Transacciones</h3>
+      <div class="flex gap-2">
+        <button class="p-2 border border-outline-variant rounded hover:bg-slate-50">
+          <span class="material-symbols-outlined text-sm">filter_list</span>
+        </button>
+        <button class="p-2 border border-outline-variant rounded hover:bg-slate-50">
+          <span class="material-symbols-outlined text-sm">search</span>
+        </button>
+      </div>
+    </div>
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-surface-container-lowest border-b border-slate-100">
+          <th class="px-md py-4 font-label-caps text-on-surface-variant text-xs">FECHA</th>
+          <th class="px-md py-4 font-label-caps text-on-surface-variant text-xs">ENTIDAD</th>
+          <th class="px-md py-4 font-label-caps text-on-surface-variant text-xs">CATEGORÍA</th>
+          <th class="px-md py-4 font-label-caps text-on-surface-variant text-xs text-right">CANTIDAD</th>
+          <th class="px-md py-4 font-label-caps text-on-surface-variant text-xs text-center">ESTADO</th>
+          <th class="px-md py-4 font-label-caps text-on-surface-variant text-xs">FUENTE</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-md py-4 font-body-md text-slate-500">20 Jul 2024</td>
+          <td class="px-md py-4 font-semibold text-on-surface">Jameson Cooper</td>
+          <td class="px-md py-4 font-body-md text-slate-500">Plan de Entrenamiento Elite</td>
+          <td class="px-md py-4 text-right font-data-mono text-secondary">+$150.00</td>
+          <td class="px-md py-4 text-center">
+            <span class="px-2 py-1 bg-secondary/10 text-secondary rounded-full text-[10px] font-bold">LIQUIDADO</span>
+          </td>
+          <td class="px-md py-4">
+            <div class="flex items-center gap-1.5">
+              <div class="w-2 h-2 rounded-full bg-[#635bff]"></div>
+              <span class="text-[11px] font-medium text-slate-400">Stripe</span>
+            </div>
+          </td>
+        </tr>
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-md py-4 font-body-md text-slate-500">19 Jul 2024</td>
+          <td class="px-md py-4 font-semibold text-on-surface">Nike Team Sales</td>
+          <td class="px-md py-4 font-body-md text-slate-500">Pedido de Ropa</td>
+          <td class="px-md py-4 text-right font-data-mono text-tertiary">-$2,140.00</td>
+          <td class="px-md py-4 text-center">
+            <span class="px-2 py-1 bg-tertiary/10 text-tertiary rounded-full text-[10px] font-bold">PAGADO</span>
+          </td>
+          <td class="px-md py-4">
+            <div class="flex items-center gap-1.5">
+              <div class="w-2 h-2 rounded-full bg-slate-400"></div>
+              <span class="text-[11px] font-medium text-slate-400">Trf. Bancaria</span>
+            </div>
+          </td>
+        </tr>
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-md py-4 font-body-md text-slate-500">18 Jul 2024</td>
+          <td class="px-md py-4 font-semibold text-on-surface">Maya Rodriguez</td>
+          <td class="px-md py-4 font-body-md text-slate-500">Membresía Mensual</td>
+          <td class="px-md py-4 text-right font-data-mono text-primary">+$85.00</td>
+          <td class="px-md py-4 text-center">
+            <span class="px-2 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold">PENDIENTE</span>
+          </td>
+          <td class="px-md py-4">
+            <div class="flex items-center gap-1.5">
+              <div class="w-2 h-2 rounded-full bg-[#0070ba]"></div>
+              <span class="text-[11px] font-medium text-slate-400">PayPal</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="p-4 bg-slate-50 text-center">
+      <button class="font-body-md text-primary font-semibold hover:underline">Mostrar 20 Transacciones Más</button>
+    </div>
+  </section>
+</main>
+</body>
+</html>

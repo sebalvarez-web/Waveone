@@ -1,19 +1,75 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        "outline-variant": "#c4c6d1",
+        "surface-dim": "#dad9de",
+        "surface-variant": "#e3e2e7",
+        "on-primary": "#ffffff",
+        "primary-fixed": "#dce1ff",
+        "on-background": "#1a1b1f",
+        error: "#ba1a1a",
+        "primary-container": "#002358",
+        "surface-container": "#efedf2",
+        secondary: "#006e2e",
+        "on-error": "#ffffff",
+        "surface-container-highest": "#e3e2e7",
+        "on-surface-variant": "#44464f",
+        "surface-container-high": "#e9e7ed",
+        surface: "#faf8fe",
+        primary: "#002358",
+        "on-primary-container": "#ffffff",
+        "on-secondary": "#ffffff",
+        "surface-container-low": "#f4f3f8",
+        "tertiary-container": "#4b1200",
+        "on-error-container": "#93000a",
+        "secondary-container": "#61fc89",
+        "surface-container-lowest": "#ffffff",
+        "on-secondary-container": "#007230",
+        outline: "#747780",
+        tertiary: "#280600",
+        background: "#faf8fe",
+        "error-container": "#ffdad6",
+        "on-surface": "#1a1b1f",
+        "on-secondary-fixed-variant": "#005321",
+      },
+      borderRadius: {
+        DEFAULT: "0.5rem",
+        lg: "0.5rem",
+        xl: "0.75rem",
+        full: "9999px",
+      },
+      spacing: {
+        lg: "48px",
+        gutter: "24px",
+        sm: "12px",
+        base: "8px",
+        xs: "4px",
+        md: "24px",
+      },
+      fontFamily: {
+        headline: ["Lexend", "sans-serif"],
+        body: ["Work Sans", "sans-serif"],
+      },
+      fontSize: {
+        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "600" }],
+        "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }],
+        "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "500" }],
+        "label-caps": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+        "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+        "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+        "data-mono": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }],
       },
     },
   },
   plugins: [],
 };
+
 export default config;
