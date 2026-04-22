@@ -64,6 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (updateErr) {
       console.error("No se pudo persistir paypal_subscription_id:", updateErr);
+      return res.status(500).json({ error: "Suscripción creada en PayPal pero no persistida" });
     }
 
     const approvalLink = subscription.links?.find(
