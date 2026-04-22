@@ -64,11 +64,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const saleId = resource.id;
       const monto = Number(resource.amount?.total ?? 0);
 
-      const { data: corredor } = await supabase
-        .from("corredores")
-        .select("id")
-        .or(`paypal_payer_id.eq.${payerId},paypal_subscription_id.eq.${subscriptionId}`)
-        .single();
+      const filters = [
+        payerId ? `paypal_payer_id.eq.${payerId}` : null,
+        subscriptionId ? `paypal_subscription_id.eq.${subscriptionId}` : null,
+      ].filter((f): f is string => f !== null).join(",");
+
+      let corredor: { id: string } | null = null;
+      if (filters) {
+        const { data, error: lookupErr } = await supabase
+          .from("corredores")
+          .select("id")
+          .or(filters)
+          .single();
+        if (lookupErr && lookupErr.code !== "PGRST116") throw new Error(lookupErr.message);
+        corredor = data;
+      }
 
       if (corredor) {
         const { error: upsertErr } = await supabase.from("transacciones").upsert(
@@ -101,24 +111,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const { resource } = body;
       const subscriptionId = resource.id;
 
-      const { data: corredor } = await supabase
+      const { data: corredor, error: lookupErr } = await supabase
         .from("corredores")
         .select("id")
         .eq("paypal_subscription_id", subscriptionId)
         .single();
+      if (lookupErr && lookupErr.code !== "PGRST116") throw new Error(lookupErr.message);
 
       if (corredor) {
         const { error: upsertErr } = await supabase.from("transacciones").upsert(
           {
             tipo: "ingreso",
             descripcion: `Pago fallido PayPal — suscripción ${subscriptionId}`,
-            monto: 0,
+            monto: Number(resource.amount?.total ?? 0),
             fecha: new Date().toISOString().split("T")[0],
             categoria: "membresia",
             metodo: "paypal",
             estado: "vencido",
             corredor_id: corredor.id,
-            paypal_order_id: `failed_${subscriptionId}_${Date.now()}`,
+            paypal_order_id: body.id ?? `failed_${subscriptionId}`,
           },
           { onConflict: "paypal_order_id" }
         );

@@ -115,4 +115,49 @@ describe("POST /api/webhooks/paypal", () => {
       expect.objectContaining({ fuente: "paypal" })
     );
   });
+
+  it("registra pago fallido cuando se encuentra el corredor", async () => {
+    mockPaypalFetch.mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({ verification_status: "SUCCESS" }),
+    });
+
+    const upsertMock = jest.fn().mockResolvedValue({ error: null });
+    mockCreateServerClient.mockReturnValue({
+      from: jest.fn().mockImplementation((table: string) => {
+        if (table === "corredores") {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: { id: "corredor-1" }, error: null }),
+          };
+        }
+        if (table === "transacciones") return { upsert: upsertMock };
+        return {};
+      }),
+    });
+
+    const { req, res } = createMocks({
+      method: "POST",
+      body: {
+        id: "WH-FAIL-001",
+        event_type: "BILLING.SUBSCRIPTION.PAYMENT.FAILED",
+        resource: {
+          id: "I-SUB_FAIL",
+          amount: { total: "45.00", currency: "USD" },
+        },
+      },
+    });
+
+    await handler(req, res);
+    expect(res._getStatusCode()).toBe(200);
+    expect(upsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        estado: "vencido",
+        metodo: "paypal",
+        corredor_id: "corredor-1",
+      }),
+      { onConflict: "paypal_order_id" }
+    );
+  });
 });
