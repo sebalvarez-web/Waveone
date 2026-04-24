@@ -25,3 +25,7 @@ body {
     text-wrap: balance;
   }
 }
+
+input, select, textarea {
+  color: #1a1b1f;
+}

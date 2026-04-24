@@ -10,6 +10,8 @@ const navItems = [
   { href: "/", label: "Panel Control", icon: "dashboard" },
   { href: "/corredores", label: "Corredores", icon: "directions_run" },
   { href: "/finanzas", label: "Finanzas", icon: "payments" },
+  { href: "/pagos", label: "Pagos", icon: "account_balance_wallet" },
+  { href: "/gastos", label: "Gastos", icon: "receipt_long" },
   { href: "/configuracion", label: "Configuración", icon: "settings" },
 ];
 
