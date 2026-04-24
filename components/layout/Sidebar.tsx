@@ -12,6 +12,7 @@ const navItems = [
   { href: "/finanzas", label: "Finanzas", icon: "payments" },
   { href: "/pagos", label: "Pagos", icon: "account_balance_wallet" },
   { href: "/gastos", label: "Gastos", icon: "receipt_long" },
+  { href: "/deudas", label: "Deudas", icon: "calendar_month" },
   { href: "/configuracion", label: "Configuración", icon: "settings" },
 ];
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -8,6 +8,7 @@ import { FormCorredor } from "@/components/corredores/FormCorredor";
 import { usePlanes } from "@/hooks/usePlanes";
 import { useTransacciones } from "@/hooks/useTransacciones";
 import { toast } from "@/components/ui/Toast";
+import { calcularDeudas, MESES_ES } from "@/lib/deudas";
 import type { Corredor } from "@/types/database";
 
 const ESTADO_COLOR: Record<string, string> = {
@@ -40,6 +41,12 @@ export default function CorredorPerfilPage() {
         setLoading(false);
       });
   }, [id, supabase]);
+
+  const deudaData = useMemo(() => {
+    if (!corredor) return null;
+    const result = calcularDeudas([corredor], transacciones);
+    return result[0] ?? null;
+  }, [corredor, transacciones]);
 
   const saldo = transacciones.reduce((acc, t) => {
     return t.tipo === "ingreso" ? acc + Number(t.monto) : acc - Number(t.monto);
@@ -186,6 +193,44 @@ export default function CorredorPerfilPage() {
                 </table>
               </div>
             </div>
+
+            {deudaData && (
+              <div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="font-headline-sm">Calendario de Pagos</h4>
+                  {deudaData.mesesDeudaCount > 0 ? (
+                    <span className="text-sm font-semibold text-red-600">
+                      {deudaData.mesesDeudaCount} mes{deudaData.mesesDeudaCount > 1 ? "es" : ""} adeudado{deudaData.mesesDeudaCount > 1 ? "s" : ""} — ${deudaData.totalDeuda.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </span>
+                  ) : (
+                    <span className="text-sm font-semibold text-secondary">Al corriente</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {deudaData.meses.map(({ year, month, estado }) => (
+                    <div
+                      key={`${year}-${month}`}
+                      title={estado === "pagado" ? "Pagado" : estado === "deuda" ? "Adeudado" : "Pendiente"}
+                      className={`flex flex-col items-center px-2 py-1.5 rounded-lg text-[11px] font-semibold min-w-[40px] ${
+                        estado === "pagado"
+                          ? "bg-secondary/15 text-secondary"
+                          : estado === "deuda"
+                          ? "bg-red-100 text-red-600"
+                          : "bg-slate-100 text-slate-400"
+                      }`}
+                    >
+                      <span>{MESES_ES[month]}</span>
+                      <span className="text-[10px] font-normal opacity-70">{String(year).slice(2)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-4 mt-3 text-[11px] text-outline">
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-secondary/20 inline-block" />Pagado</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-100 inline-block" />Adeudado</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-slate-100 inline-block" />Pendiente</span>
+                </div>
+              </div>
+            )}
 
             <div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
               <h4 className="font-headline-sm mb-4">Nota del Entrenador</h4>
