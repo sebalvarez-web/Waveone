@@ -7,7 +7,8 @@ create table public.corredor_emails (
   email       text not null,
   etiqueta    text,
   es_principal boolean not null default false,
-  created_at  timestamptz not null default now()
+  created_at  timestamptz not null default now(),
+  unique(corredor_id, email)
 );
 
 -- Enum para tipos de eventos en el historial
@@ -29,6 +30,9 @@ create table public.corredor_historial (
 );
 
 -- Trigger: auto-registra cambios de plan_id y estado en corredores
+-- SECURITY DEFINER: Esta función corre con privilegios elevated para bypasear RLS.
+-- Esto es intencional: permite que los cambios de plan_id/estado se registren en historial
+-- sin restricciones de RLS. Las filas insertadas por el trigger tendrán creado_por = NULL.
 create or replace function public.handle_corredor_historial()
 returns trigger as $$
 begin
@@ -76,6 +80,14 @@ create policy "corredor_emails: entrenador edita los suyos" on public.corredor_e
     )
   );
 
+create policy "corredor_emails: entrenador actualiza los suyos" on public.corredor_emails
+  for update using (
+    exists (
+      select 1 from public.corredores c
+      where c.id = corredor_id and c.entrenador_id = auth.uid()
+    )
+  );
+
 create policy "corredor_emails: entrenador borra los suyos" on public.corredor_emails
   for delete using (
     exists (
@@ -84,7 +96,9 @@ create policy "corredor_emails: entrenador borra los suyos" on public.corredor_e
     )
   );
 
--- RLS: corredor_historial sigue la misma lógica que corredores
+-- RLS: corredor_historial — log inmutable de auditoría.
+-- Entrenadores pueden insertar notas manuales pero NO pueden UPDATE/DELETE ninguna fila.
+-- Los admin tienen acceso completo vía la policy "for all".
 alter table public.corredor_historial enable row level security;
 
 create policy "corredor_historial: admin ve todo" on public.corredor_historial
