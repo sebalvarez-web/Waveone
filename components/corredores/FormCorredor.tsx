@@ -110,13 +110,16 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
 
     const emailsValidos = emailsAdicionales.filter((e) => e.email.trim());
     if (emailsValidos.length > 0) {
-      await supabase.from("corredor_emails").insert(
+      const { error: emailErr } = await supabase.from("corredor_emails").insert(
         emailsValidos.map((e) => ({
           corredor_id: corredorId,
           email: e.email.trim(),
           etiqueta: e.etiqueta.trim() || null,
         }))
       );
+      if (emailErr) {
+        toast.error("Corredor guardado pero hubo un error al guardar los emails adicionales");
+      }
     }
 
     setLoading(false);
