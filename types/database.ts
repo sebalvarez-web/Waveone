@@ -76,3 +76,35 @@ export interface PagoSinAsignar {
   resuelto: boolean;
   created_at: string;
 }
+
+export interface CorredorEmail {
+  id: string;
+  corredor_id: string;
+  email: string;
+  etiqueta: string | null;
+  es_principal: boolean;
+  created_at: string;
+}
+
+export type HistorialTipo = "cambio_plan" | "cambio_estado" | "pausa" | "nota";
+
+/** Entrada unificada para el timeline del corredor (historial + pausas) */
+export interface HistorialItem {
+  id: string;
+  corredor_id: string;
+  fecha: string; // ISO string
+  tipo: HistorialTipo;
+  // cambio_plan
+  plan_anterior: { id: string; nombre: string } | null;
+  plan_nuevo: { id: string; nombre: string } | null;
+  // cambio_estado
+  estado_anterior: CorredorEstado | null;
+  estado_nuevo: CorredorEstado | null;
+  // pausa
+  mes: number | null;
+  año: number | null;
+  tarifa_mantenimiento: number | null;
+  // nota / manual
+  nota: string | null;
+  creado_por_user: { id: string; nombre: string } | null;
+}
