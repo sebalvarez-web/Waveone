@@ -57,4 +57,21 @@ describe("ModalNotaHistorial", () => {
       ])
     );
   });
+
+  it("no llama onSuccess si Supabase retorna error", async () => {
+    mockInsert.mockResolvedValue({ error: { message: "DB error" } });
+    const onSuccess = jest.fn();
+
+    render(<ModalNotaHistorial {...defaultProps} onSuccess={onSuccess} />);
+
+    fireEvent.change(screen.getByPlaceholderText(/nota/i), {
+      target: { value: "Una nota cualquiera" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /guardar/i }));
+
+    await waitFor(() => {
+      expect(mockInsert).toHaveBeenCalled();
+    });
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
 });

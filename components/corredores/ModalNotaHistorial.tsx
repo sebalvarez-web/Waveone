@@ -36,7 +36,7 @@ export function ModalNotaHistorial({ corredorId, onClose, onSuccess }: ModalNota
     setLoading(false);
 
     if (err) {
-      toast.error("Error al guardar la nota");
+      toast.error(err.message ?? "Error al guardar la nota");
       return;
     }
 
