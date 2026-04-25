@@ -15,7 +15,7 @@ export function useHistorialCorredor(corredorId: string) {
       setLoading(true);
       setError(null);
 
-      const [{ data: hData, error: hErr }, { data: pData }] = await Promise.all([
+      const [{ data: hData, error: hErr }, { data: pData, error: pErr }] = await Promise.all([
         supabase
           .from("corredor_historial")
           .select(`
@@ -32,8 +32,8 @@ export function useHistorialCorredor(corredorId: string) {
           .eq("corredor_id", corredorId),
       ]);
 
-      if (hErr) {
-        setError(hErr);
+      if (hErr || pErr) {
+        setError(hErr ?? pErr);
         setLoading(false);
         return;
       }
@@ -57,7 +57,7 @@ export function useHistorialCorredor(corredorId: string) {
       const pausaItems: HistorialItem[] = (pData ?? []).map((p: Record<string, unknown>) => ({
         id: p.id as string,
         corredor_id: p.corredor_id as string,
-        fecha: `${p.año as number}-${String(p.mes as number).padStart(2, "0")}-01T00:00:00Z`,
+        fecha: (p.año && p.mes) ? `${p.año}-${String(p.mes as number).padStart(2, "0")}-01T00:00:00Z` : new Date(0).toISOString(),
         tipo: "pausa" as const,
         plan_anterior: null,
         plan_nuevo: null,
