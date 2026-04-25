@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { toast } from "@/components/ui/Toast";
-import type { Corredor, Plan } from "@/types/database";
+import type { Corredor, Plan, CorredorEmail } from "@/types/database";
+
+interface EmailAdicional {
+  email: string;
+  etiqueta: string;
+}
 
 interface FormCorredorProps {
   corredor?: Corredor;
@@ -25,8 +30,27 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
     uniforme_entregado: corredor?.uniforme_entregado ?? false,
     proxima_carrera: corredor?.proxima_carrera ?? "",
   });
+  const [emailsAdicionales, setEmailsAdicionales] = useState<EmailAdicional[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!corredor?.id) return;
+    supabase
+      .from("corredor_emails")
+      .select("*")
+      .eq("corredor_id", corredor.id)
+      .then(({ data }) => {
+        if (data) {
+          setEmailsAdicionales(
+            (data as CorredorEmail[]).map((e) => ({
+              email: e.email,
+              etiqueta: e.etiqueta ?? "",
+            }))
+          );
+        }
+      });
+  }, [corredor?.id, supabase]);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -51,17 +75,51 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
       entrenador_id: corredor?.entrenador_id ?? user!.id,
     };
 
-    const { error } = isEditing
-      ? await supabase.from("corredores").update(payload).eq("id", corredor.id)
-      : await supabase.from("corredores").insert(payload);
+    let corredorId = corredor?.id;
 
-    setLoading(false);
-
-    if (error) {
-      toast.error("Error al guardar el corredor");
-      return;
+    if (isEditing) {
+      const { error } = await supabase
+        .from("corredores")
+        .update(payload)
+        .eq("id", corredor.id);
+      if (error) {
+        toast.error("Error al guardar el corredor");
+        setLoading(false);
+        return;
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("corredores")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error || !data) {
+        toast.error("Error al guardar el corredor");
+        setLoading(false);
+        return;
+      }
+      corredorId = data.id;
     }
 
+    if (isEditing) {
+      await supabase
+        .from("corredor_emails")
+        .delete()
+        .eq("corredor_id", corredor.id);
+    }
+
+    const emailsValidos = emailsAdicionales.filter((e) => e.email.trim());
+    if (emailsValidos.length > 0) {
+      await supabase.from("corredor_emails").insert(
+        emailsValidos.map((e) => ({
+          corredor_id: corredorId,
+          email: e.email.trim(),
+          etiqueta: e.etiqueta.trim() || null,
+        }))
+      );
+    }
+
+    setLoading(false);
     toast.success(isEditing ? "Corredor actualizado" : "Corredor añadido");
     onSuccess();
     onClose();
@@ -73,9 +131,20 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
       setForm((prev) => ({ ...prev, [key]: e.target.value })),
   });
 
+  const addEmail = () =>
+    setEmailsAdicionales((prev) => [...prev, { email: "", etiqueta: "" }]);
+
+  const removeEmail = (index: number) =>
+    setEmailsAdicionales((prev) => prev.filter((_, i) => i !== index));
+
+  const updateEmail = (index: number, field: keyof EmailAdicional, value: string) =>
+    setEmailsAdicionales((prev) =>
+      prev.map((e, i) => (i === index ? { ...e, [field]: value } : e))
+    );
+
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-lg shadow-xl">
+      <div className="bg-white rounded-xl w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
           <h3 className="font-headline-sm text-on-surface">
             {isEditing ? "Editar Corredor" : "Añadir Corredor"}
@@ -98,7 +167,7 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
           </div>
 
           <div>
-            <label className="block font-label-caps text-outline mb-1 text-xs">CORREO *</label>
+            <label className="block font-label-caps text-outline mb-1 text-xs">CORREO PRINCIPAL *</label>
             <input
               type="email"
               placeholder="correo@ejemplo.com"
@@ -106,6 +175,47 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
               className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
             {errors.email && <p className="text-error text-xs mt-1">{errors.email}</p>}
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <label className="font-label-caps text-outline text-xs">CORREOS ADICIONALES</label>
+              <button
+                type="button"
+                onClick={addEmail}
+                aria-label="Agregar correo"
+                className="flex items-center gap-1 text-xs text-primary font-semibold hover:opacity-80"
+              >
+                <span className="material-symbols-outlined text-sm">add</span>
+                Agregar correo
+              </button>
+            </div>
+            {emailsAdicionales.map((entry, i) => (
+              <div key={i} className="flex gap-2 mb-2">
+                <input
+                  type="email"
+                  placeholder="Email adicional"
+                  value={entry.email}
+                  onChange={(e) => updateEmail(i, "email", e.target.value)}
+                  className="flex-1 border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+                <input
+                  type="text"
+                  placeholder="Etiqueta"
+                  value={entry.etiqueta}
+                  onChange={(e) => updateEmail(i, "etiqueta", e.target.value)}
+                  className="w-28 border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeEmail(i)}
+                  aria-label="Eliminar correo"
+                  className="text-outline hover:text-error"
+                >
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
+              </div>
+            ))}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
