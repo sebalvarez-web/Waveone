@@ -61,7 +61,7 @@ export default function CorredorPerfilPage() {
   const supabase = useSupabaseClient();
   const { planes } = usePlanes();
   const { transacciones } = useTransacciones({ corredorId: id });
-  const { historial, loading: loadingHistorial } = useHistorialCorredor(id);
+  const { historial, loading: loadingHistorial, refetch: refetchHistorial } = useHistorialCorredor(id);
 
   const [corredor, setCorredor] = useState<Corredor | null>(null);
   const [emailsAdicionales, setEmailsAdicionales] = useState<CorredorEmail[]>([]);
@@ -419,7 +419,7 @@ export default function CorredorPerfilPage() {
             onClose={() => setShowNotaModal(false)}
             onSuccess={() => {
               setShowNotaModal(false);
-              router.reload();
+              refetchHistorial();
             }}
           />
         )}

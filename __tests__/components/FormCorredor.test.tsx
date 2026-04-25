@@ -35,7 +35,7 @@ jest.mock("@supabase/auth-helpers-react", () => ({
 }));
 
 const mockPlanes = [
-  { id: "plan-1", nombre: "Club Competitivo", precio_mensual: 45 },
+  { id: "plan-1", nombre: "Club Competitivo", precio_mensual: 45, descripcion: "" },
 ];
 
 describe("FormCorredor", () => {
