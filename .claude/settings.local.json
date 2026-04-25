@@ -17,7 +17,13 @@
       "Bash(git -C /Users/sebastianalvarez/projects/wave-one-dashboard add components/layout/ __tests__/components/Sidebar.test.tsx)",
       "Bash(git -C /Users/sebastianalvarez/projects/wave-one-dashboard commit -m ' *)",
       "Bash(npm run *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(git push *)",
+      "Bash(npx tsc *)",
+      "Bash(STRIPE_SECRET_KEY=test_dummy npx ts-node -e \"import\\('@/lib/stripe'\\)\")",
+      "Bash(STRIPE_SECRET_KEY=sk_test_dummy npx jest __tests__/api/suscripciones/stripe.test.ts --no-coverage)",
+      "Bash(git -C /Users/sebastianalvarez/projects/wave-one-dashboard add pages/api/suscripciones/stripe.ts __tests__/api/suscripciones/stripe.test.ts jest.config.ts)",
+      "Bash(git -C /Users/sebastianalvarez/projects/wave-one-dashboard remote -v)"
     ]
   }
 }
