@@ -10,14 +10,15 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const isLoginPage = req.nextUrl.pathname === "/login";
+  const publicPaths = ["/login", "/signup"];
+  const isPublicPage = publicPaths.includes(req.nextUrl.pathname);
 
-  if (!session && !isLoginPage) {
+  if (!session && !isPublicPage) {
     const loginUrl = new URL("/login", req.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (session && isLoginPage) {
+  if (session && isPublicPage) {
     const dashboardUrl = new URL("/", req.url);
     return NextResponse.redirect(dashboardUrl);
   }

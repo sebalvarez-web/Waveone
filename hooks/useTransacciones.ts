@@ -37,7 +37,18 @@ export function useTransacciones({ limit = 50, corredorId }: UseTransaccionesOpt
 
   useEffect(() => {
     fetchTransacciones();
-  }, [fetchTransacciones]);
+
+    const channel = supabase
+      .channel("transacciones-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "transacciones" },
+        () => { fetchTransacciones(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchTransacciones, supabase]);
 
   const insertTransaccion = async (
     transaccion: Omit<Transaccion, "id" | "created_at">

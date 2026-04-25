@@ -96,6 +96,17 @@ export function useMetricasDashboard() {
     }
 
     fetchMetricas();
+
+    const channel = supabase
+      .channel("metricas-transacciones-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "transacciones" },
+        () => { fetchMetricas(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [supabase]);
 
   return { metricas, loading };
