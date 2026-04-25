@@ -5,11 +5,13 @@ import { useRouter } from "next/router";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { Layout } from "@/components/layout/Layout";
 import { FormCorredor } from "@/components/corredores/FormCorredor";
+import { ModalNotaHistorial } from "@/components/corredores/ModalNotaHistorial";
 import { usePlanes } from "@/hooks/usePlanes";
 import { useTransacciones } from "@/hooks/useTransacciones";
+import { useHistorialCorredor } from "@/hooks/useHistorialCorredor";
 import { toast } from "@/components/ui/Toast";
 import { calcularDeudas, MESES_ES } from "@/lib/deudas";
-import type { Corredor } from "@/types/database";
+import type { Corredor, CorredorEmail, HistorialItem } from "@/types/database";
 
 const ESTADO_COLOR: Record<string, string> = {
   pagado: "bg-secondary/10 text-secondary",
@@ -17,19 +19,59 @@ const ESTADO_COLOR: Record<string, string> = {
   pendiente: "bg-slate-100 text-slate-500",
 };
 
+const HISTORIAL_ICON: Record<string, string> = {
+  cambio_plan: "swap_horiz",
+  cambio_estado: "person",
+  pausa: "pause_circle",
+  nota: "notes",
+};
+
+const HISTORIAL_COLOR: Record<string, string> = {
+  cambio_plan: "bg-blue-100 text-blue-600",
+  cambio_estado: "bg-amber-100 text-amber-600",
+  pausa: "bg-slate-100 text-slate-500",
+  nota: "bg-purple-100 text-purple-600",
+};
+
+function formatHistorialDesc(item: HistorialItem): string {
+  switch (item.tipo) {
+    case "cambio_plan": {
+      const de = item.plan_anterior?.nombre ?? "Sin plan";
+      const a = item.plan_nuevo?.nombre ?? "Sin plan";
+      return `Plan: ${de} → ${a}`;
+    }
+    case "cambio_estado": {
+      const de = item.estado_anterior ?? "—";
+      const a = item.estado_nuevo ?? "—";
+      const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+      return `Estado: ${cap(de)} → ${cap(a)}`;
+    }
+    case "pausa":
+      return `Pausa — ${MESES_ES[(item.mes ?? 1) - 1]} ${item.año} (tarifa $${item.tarifa_mantenimiento?.toFixed(2)})`;
+    case "nota":
+      return item.nota ?? "";
+    default:
+      return "";
+  }
+}
+
 export default function CorredorPerfilPage() {
   const router = useRouter();
   const { id } = router.query as { id: string };
   const supabase = useSupabaseClient();
   const { planes } = usePlanes();
   const { transacciones } = useTransacciones({ corredorId: id });
+  const { historial, loading: loadingHistorial } = useHistorialCorredor(id);
+
   const [corredor, setCorredor] = useState<Corredor | null>(null);
+  const [emailsAdicionales, setEmailsAdicionales] = useState<CorredorEmail[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showNotaModal, setShowNotaModal] = useState(false);
   const [nota, setNota] = useState("");
   const [guardandoNota, setGuardandoNota] = useState(false);
 
-  useEffect(() => {
+  const fetchCorredor = () => {
     if (!id) return;
     supabase
       .from("corredores")
@@ -40,7 +82,19 @@ export default function CorredorPerfilPage() {
         setCorredor(data);
         setLoading(false);
       });
-  }, [id, supabase]);
+    supabase
+      .from("corredor_emails")
+      .select("*")
+      .eq("corredor_id", id)
+      .then(({ data }) => {
+        setEmailsAdicionales((data as CorredorEmail[]) ?? []);
+      });
+  };
+
+  useEffect(() => {
+    fetchCorredor();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const deudaData = useMemo(() => {
     if (!corredor) return null;
@@ -84,17 +138,16 @@ export default function CorredorPerfilPage() {
             </nav>
             <h2 className="text-headline-lg text-on-surface font-headline">Perfil del Corredor</h2>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowForm(true)}
-              className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90"
-            >
-              Editar Corredor
-            </button>
-          </div>
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90"
+          >
+            Editar Corredor
+          </button>
         </div>
 
         <div className="grid grid-cols-12 gap-gutter">
+          {/* Columna izquierda */}
           <div className="col-span-12 lg:col-span-4 space-y-gutter">
             <div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
               <div className="flex flex-col items-center text-center">
@@ -108,9 +161,27 @@ export default function CorredorPerfilPage() {
               </div>
               <div className="mt-6 space-y-4">
                 <div>
-                  <p className="font-label-caps text-outline text-xs mb-1">CORREO</p>
-                  <p className="text-sm text-on-surface">{corredor.email}</p>
+                  <p className="font-label-caps text-outline text-xs mb-2">CORREOS</p>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-on-surface">{corredor.email}</span>
+                      <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded">
+                        Principal
+                      </span>
+                    </div>
+                    {emailsAdicionales.map((e) => (
+                      <div key={e.id} className="flex items-center gap-2">
+                        <span className="text-sm text-on-surface">{e.email}</span>
+                        {e.etiqueta && (
+                          <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] rounded">
+                            {e.etiqueta}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
                 {corredor.telefono_emergencia && (
                   <div>
                     <p className="font-label-caps text-outline text-xs mb-1">EMERGENCIA</p>
@@ -120,7 +191,9 @@ export default function CorredorPerfilPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="font-label-caps text-outline text-xs mb-1">INGRESO</p>
-                    <p className="text-sm font-data-mono">{new Date(corredor.fecha_ingreso).toLocaleDateString("es-MX")}</p>
+                    <p className="text-sm font-data-mono">
+                      {new Date(corredor.fecha_ingreso).toLocaleDateString("es-MX")}
+                    </p>
                   </div>
                   <div>
                     <p className="font-label-caps text-outline text-xs mb-1">PLAN</p>
@@ -146,7 +219,9 @@ export default function CorredorPerfilPage() {
             </div>
           </div>
 
+          {/* Columna derecha */}
           <div className="col-span-12 lg:col-span-8 space-y-gutter">
+            {/* Historial de pagos */}
             <div className="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
               <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
                 <h4 className="font-headline-sm">Historial de Pagos</h4>
@@ -194,6 +269,7 @@ export default function CorredorPerfilPage() {
               </div>
             </div>
 
+            {/* Calendario de Pagos */}
             {deudaData && (
               <div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
                 <div className="flex justify-between items-center mb-4">
@@ -232,6 +308,69 @@ export default function CorredorPerfilPage() {
               </div>
             )}
 
+            {/* Historial del corredor */}
+            <div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="font-headline-sm">Historial</h4>
+                <button
+                  onClick={() => setShowNotaModal(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 border border-outline-variant rounded-lg text-xs font-semibold hover:bg-slate-50 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">add</span>
+                  Registrar evento
+                </button>
+              </div>
+
+              {loadingHistorial ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex-shrink-0" />
+                      <div className="flex-1 space-y-1.5 pt-1">
+                        <div className="h-3 bg-slate-100 rounded w-24" />
+                        <div className="h-3 bg-slate-100 rounded w-48" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : historial.length === 0 ? (
+                <p className="text-sm text-outline text-center py-6">Sin eventos registrados.</p>
+              ) : (
+                <div className="relative">
+                  <div className="absolute left-4 top-0 bottom-0 w-px bg-outline-variant/40" />
+                  <div className="space-y-4">
+                    {historial.map((item) => (
+                      <div key={item.id} className="flex gap-4 relative">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${HISTORIAL_COLOR[item.tipo]}`}>
+                          <span className="material-symbols-outlined text-sm">
+                            {HISTORIAL_ICON[item.tipo]}
+                          </span>
+                        </div>
+                        <div className="flex-1 pt-1">
+                          <p className="text-xs text-outline font-data-mono">
+                            {new Date(item.fecha).toLocaleDateString("es-MX", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </p>
+                          <p className="text-sm text-on-surface mt-0.5">
+                            {formatHistorialDesc(item)}
+                          </p>
+                          {item.creado_por_user && (
+                            <p className="text-xs text-outline mt-0.5">
+                              por {item.creado_por_user.nombre}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Nota del Entrenador */}
             <div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
               <h4 className="font-headline-sm mb-4">Nota del Entrenador</h4>
               <textarea
@@ -269,6 +408,17 @@ export default function CorredorPerfilPage() {
             onClose={() => setShowForm(false)}
             onSuccess={() => {
               setShowForm(false);
+              fetchCorredor();
+            }}
+          />
+        )}
+
+        {showNotaModal && (
+          <ModalNotaHistorial
+            corredorId={corredor.id}
+            onClose={() => setShowNotaModal(false)}
+            onSuccess={() => {
+              setShowNotaModal(false);
               router.reload();
             }}
           />
