@@ -14,41 +14,37 @@ export function TarjetaMetrica({
   tendencia,
   tendenciaNegativa = false,
   icono,
-  colorIcono = "text-primary",
+  colorIcono = "text-on-surface",
   children,
 }: TarjetaMetricaProps) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-md flex flex-col justify-between">
+    <div className="bg-white border border-outline-variant/60 rounded-2xl p-5 flex flex-col justify-between transition-all hover:shadow-elev hover:border-outline-variant h-full">
       <div>
-        <div className="flex justify-between items-start">
-          <span className="font-label-caps text-outline">{titulo}</span>
-          <div className={`w-10 h-10 bg-current/10 rounded-lg flex items-center justify-center ${colorIcono}`}>
-            <span className="material-symbols-outlined">{icono}</span>
+        <div className="flex justify-between items-start gap-3">
+          <span className="text-label-caps text-on-surface-variant">{titulo}</span>
+          <div className={`w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center ${colorIcono}`}>
+            <span className="material-symbols-outlined text-[20px]">{icono}</span>
           </div>
         </div>
-        <div className="mt-4">
-          <span className="text-4xl font-bold text-on-surface font-body">{valor}</span>
+        <div className="mt-5">
+          <span className="text-[34px] font-headline font-bold text-on-surface tracking-tight tabular-nums leading-none">
+            {valor}
+          </span>
           {tendencia && (
-            <div className="flex items-center gap-1 mt-1">
-              <span
-                className={`material-symbols-outlined text-sm ${
-                  tendenciaNegativa ? "text-tertiary" : "text-secondary"
-                }`}
-              >
-                {tendenciaNegativa ? "warning" : "arrow_upward"}
+            <div className={`inline-flex items-center gap-1 mt-3 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+              tendenciaNegativa
+                ? "bg-tertiary-container text-on-tertiary-container"
+                : "bg-secondary-container text-on-secondary-container"
+            }`}>
+              <span className="material-symbols-outlined text-[14px]">
+                {tendenciaNegativa ? "warning" : "trending_up"}
               </span>
-              <span
-                className={`font-data-mono text-xs ${
-                  tendenciaNegativa ? "text-tertiary" : "text-secondary"
-                }`}
-              >
-                {tendencia}
-              </span>
+              <span className="tabular-nums">{tendencia}</span>
             </div>
           )}
         </div>
       </div>
-      {children && <div className="mt-6">{children}</div>}
+      {children && <div className="mt-5 pt-5 border-t border-outline-variant/40">{children}</div>}
     </div>
   );
 }

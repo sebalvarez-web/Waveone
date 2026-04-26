@@ -24,13 +24,13 @@ export function Layout({ children, pagosSinAsignar = 0, onSearch }: LayoutProps)
     });
   };
 
-  const mainMargin = collapsed ? "md:ml-16" : "md:ml-60";
+  const mainMargin = collapsed ? "md:ml-[72px]" : "md:ml-[248px]";
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background min-h-screen text-on-background">
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          className="fixed inset-0 bg-primary/40 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -49,7 +49,7 @@ export function Layout({ children, pagosSinAsignar = 0, onSearch }: LayoutProps)
         onMobileMenuClick={() => setMobileOpen(true)}
       />
 
-      <main className={`${mainMargin} pt-20 px-4 md:px-8 pb-12 transition-all duration-200`}>
+      <main className={`${mainMargin} pt-[88px] px-4 md:px-8 pb-16 transition-all duration-300 ease-out max-w-[1600px] mx-auto`}>
         {children}
       </main>
     </div>

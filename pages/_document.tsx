@@ -4,8 +4,10 @@ export default function Document() {
   return (
     <Html lang="es" className="light">
       <Head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
           rel="stylesheet"
         />
         <link
@@ -15,6 +17,9 @@ export default function Document() {
         <style>{`
           .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+          }
+          .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
           }
         `}</style>
       </Head>
