@@ -225,7 +225,7 @@ export default function DeudasPage() {
                         >
                           {MESES_ES[month]}
                           <br />
-                          <span className="text-[10px] text-outline font-normal tracking-wider">'{String(year).slice(2)}</span>
+                          <span className="text-[10px] text-outline font-normal tracking-wider">&apos;{String(year).slice(2)}</span>
                         </th>
                       );
                     })}
