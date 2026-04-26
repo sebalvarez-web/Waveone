@@ -8,106 +8,113 @@ interface TablaCorredoresProps {
   onDelete: (id: string) => void;
 }
 
-const ESTADO_BADGE: Record<string, string> = {
-  activo: "bg-secondary/10 text-secondary",
-  pausado: "bg-slate-100 text-slate-500",
-  inactivo: "bg-tertiary/10 text-tertiary",
+const ESTADO_CFG: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+  activo:   { bg: "bg-secondary-container", text: "text-on-secondary-container", dot: "bg-secondary", label: "Activo" },
+  pausado:  { bg: "bg-surface-container",   text: "text-on-surface-variant",     dot: "bg-outline",   label: "Pausado" },
+  inactivo: { bg: "bg-error-container",     text: "text-on-error-container",     dot: "bg-error",     label: "Inactivo" },
 };
+
+function BadgeEstado({ estado }: { estado: string }) {
+  const cfg = ESTADO_CFG[estado] ?? { bg: "bg-surface-container", text: "text-on-surface-variant", dot: "bg-outline", label: estado };
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold ${cfg.bg} ${cfg.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+}
 
 export function TablaCorredores({ corredores, loading, onEdit, onDelete }: TablaCorredoresProps) {
   if (loading) {
     return (
-      <div className="space-y-2">
+      <div className="bg-white border border-outline-variant/60 rounded-xl p-5 space-y-2 shadow-soft">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-16 bg-slate-100 rounded-lg animate-pulse" />
+          <div key={i} className="h-14 bg-surface-container-low rounded-lg animate-pulse" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div className="bg-white rounded-xl border border-outline-variant/60 overflow-hidden shadow-soft">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
-              {["Nombre", "Fecha Ingreso", "Uniforme", "Estado", "Plan", "Entrenador", "Próxima Carrera", ""].map(
-                (h) => (
-                  <th key={h} className="px-6 py-4 font-label-caps text-slate-500 uppercase tracking-wider text-xs">
-                    {h}
-                  </th>
-                )
-              )}
+            <tr className="bg-surface-container-low/40 border-b border-outline-variant/40">
+              {["NOMBRE", "INGRESO", "UNIFORME", "ESTADO", "PLAN", "ENTRENADOR", "PRÓXIMA CARRERA", ""].map((h) => (
+                <th key={h} className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant whitespace-nowrap">
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-outline-variant/30">
             {corredores.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center text-outline text-sm">
-                  No hay corredores registrados.
+                <td colSpan={8} className="px-5 py-16 text-center">
+                  <div className="flex flex-col items-center gap-2 text-on-surface-variant">
+                    <span className="material-symbols-outlined text-3xl text-outline">person_search</span>
+                    <p className="text-sm">No hay corredores que coincidan.</p>
+                  </div>
                 </td>
               </tr>
             )}
             {corredores.map((c) => {
               const initials = c.nombre.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
               return (
-                <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-6 py-4">
-                    <Link href={`/corredores/${c.id}`} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-primary flex items-center justify-center font-semibold text-xs">
+                <tr key={c.id} className="group hover:bg-surface-container-low/40 transition-colors">
+                  <td className="px-5 py-3">
+                    <Link href={`/corredores/${c.id}`} className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent to-[#FF8A6B] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
                         {initials}
                       </div>
-                      <div>
-                        <p className="font-semibold text-on-surface text-sm">{c.nombre}</p>
-                        <p className="text-xs text-slate-400">{c.email}</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-on-surface text-sm group-hover:text-accent transition-colors truncate">
+                          {c.nombre}
+                        </p>
+                        <p className="text-xs text-on-surface-variant truncate">{c.email}</p>
                       </div>
                     </Link>
                   </td>
-                  <td className="px-6 py-4 text-slate-600 text-sm font-data-mono">
-                    {new Date(c.fecha_ingreso).toLocaleDateString("es-MX")}
+                  <td className="px-5 py-3 text-on-surface-variant text-sm font-mono whitespace-nowrap">
+                    {new Date(c.fecha_ingreso).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" })}
                   </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                        c.uniforme_entregado
-                          ? "bg-secondary/10 text-secondary"
-                          : "bg-tertiary/10 text-tertiary"
-                      }`}
-                    >
-                      {c.uniforme_entregado ? "Entregado" : "Pendiente"}
-                    </span>
+                  <td className="px-5 py-3">
+                    {c.uniforme_entregado ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-secondary">
+                        <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                        Entregado
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-tertiary">
+                        <span className="material-symbols-outlined text-[14px]">schedule</span>
+                        Pendiente
+                      </span>
+                    )}
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${ESTADO_BADGE[c.estado]}`}>
-                      {c.estado}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    {c.plan?.nombre ?? "—"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    {c.entrenador?.nombre ?? "—"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">
+                  <td className="px-5 py-3"><BadgeEstado estado={c.estado} /></td>
+                  <td className="px-5 py-3 text-sm text-on-surface-variant">{c.plan?.nombre ?? "—"}</td>
+                  <td className="px-5 py-3 text-sm text-on-surface-variant">{c.entrenador?.nombre ?? "—"}</td>
+                  <td className="px-5 py-3 text-sm text-on-surface-variant max-w-[160px] truncate">
                     {c.proxima_carrera ?? "—"}
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-5 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => onEdit(c)}
-                        className="text-slate-400 hover:text-primary transition-colors p-1"
-                        title="Editar"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"
+                        aria-label={`Editar ${c.nombre}`}
                       >
-                        <span className="material-symbols-outlined text-sm">edit</span>
+                        <span className="material-symbols-outlined text-[18px]">edit</span>
                       </button>
                       <button
                         onClick={() => {
                           if (confirm(`¿Eliminar a ${c.nombre}?`)) onDelete(c.id);
                         }}
-                        className="text-slate-400 hover:text-error transition-colors p-1"
-                        title="Eliminar"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-error-container hover:text-error transition-colors"
+                        aria-label={`Eliminar ${c.nombre}`}
                       >
-                        <span className="material-symbols-outlined text-sm">delete</span>
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
                       </button>
                     </div>
                   </td>

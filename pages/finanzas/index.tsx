@@ -9,6 +9,10 @@ import { PagosSinAsignar } from "@/components/pagos/PagosSinAsignar";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import toast from "react-hot-toast";
 
+function fmt(n: number) {
+  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export default function FinanzasPage() {
   const { transacciones, loading, refetch } = useTransacciones({ limit: 100 });
   const { corredores } = useCorredores();
@@ -25,8 +29,9 @@ export default function FinanzasPage() {
 
   const ingresos = transacciones.filter((t) => t.tipo === "ingreso");
   const gastos = transacciones.filter((t) => t.tipo === "gasto");
-  const saldoLiquido = ingresos.reduce((s, t) => s + Number(t.monto), 0) -
-    gastos.reduce((s, t) => s + Number(t.monto), 0);
+  const totalIngresos = ingresos.reduce((s, t) => s + Number(t.monto), 0);
+  const totalGastos = gastos.reduce((s, t) => s + Number(t.monto), 0);
+  const saldoLiquido = totalIngresos - totalGastos;
   const gastosPendientes = gastos.filter((t) => t.estado === "pendiente");
   const totalGastosPendientes = gastosPendientes.reduce((s, t) => s + Number(t.monto), 0);
 
@@ -34,88 +39,97 @@ export default function FinanzasPage() {
     <>
       <Head><title>Wave One — Finanzas</title></Head>
       <Layout>
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-headline-lg text-on-background font-headline">Gestión Financiera</h2>
-            <p className="text-body-lg text-on-surface-variant">
-              Seguimiento del rendimiento de ingresos y costes operativos.
+        <div className="mb-6">
+          <p className="text-label-caps text-on-surface-variant mb-2">FINANZAS</p>
+          <h2 className="text-headline-lg text-on-background font-headline">Gestión financiera</h2>
+          <p className="text-body-md text-on-surface-variant mt-1">
+            Rendimiento de ingresos y costes operativos en un solo lugar.
+          </p>
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+          <div className="bg-primary text-white rounded-xl p-5 shadow-soft relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-accent/25 blur-3xl" />
+            <p className="text-[10px] font-bold tracking-wider text-white/70 relative">SALDO LÍQUIDO</p>
+            <p className="text-display-md font-headline mt-2 tabular-nums tracking-tight relative leading-none">
+              ${fmt(saldoLiquido)}
+            </p>
+            <p className="text-[11px] text-white/60 mt-2 relative">
+              Ingresos − Gastos
             </p>
           </div>
-        </div>
-
-        <div className="grid grid-cols-12 gap-gutter mb-lg">
-          <div className="col-span-12 md:col-span-4 bg-white p-md border border-slate-200 rounded-xl">
-            <p className="font-label-caps text-on-surface-variant mb-2">SALDO LÍQUIDO ACTUAL</p>
-            <span className="text-headline-lg text-primary font-headline">
-              ${saldoLiquido.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </span>
-          </div>
-          <div className="col-span-12 md:col-span-4 bg-white p-md border border-slate-200 rounded-xl">
-            <p className="font-label-caps text-on-surface-variant mb-2">GASTOS PENDIENTES</p>
-            <span className="text-headline-lg text-tertiary font-headline">
-              ${totalGastosPendientes.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </span>
-            <p className="text-[11px] text-slate-400 mt-1 uppercase">
-              {gastosPendientes.length} activos
+          <div className="bg-white border border-outline-variant/60 rounded-xl p-5 shadow-soft">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px] font-bold tracking-wider text-on-surface-variant">TOTAL INGRESOS</p>
+              <span className="material-symbols-outlined text-secondary text-[18px]">trending_up</span>
+            </div>
+            <p className="text-3xl font-headline font-bold text-secondary mt-2 tabular-nums tracking-tight">
+              ${fmt(totalIngresos)}
             </p>
+            <p className="text-[11px] text-on-surface-variant mt-1">{ingresos.length} entradas</p>
           </div>
-          <div className="col-span-12 md:col-span-4 bg-white p-md border border-slate-200 rounded-xl">
-            <p className="font-label-caps text-on-surface-variant mb-2">TOTAL INGRESOS</p>
-            <span className="text-headline-lg text-secondary font-headline">
-              ${ingresos.reduce((s, t) => s + Number(t.monto), 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-12 gap-gutter">
-          <div className="col-span-12 lg:col-span-7 space-y-gutter">
-            <section className="bg-white border border-slate-200 rounded-xl">
-              <div className="p-md border-b border-slate-100">
-                <h3 className="font-headline-sm flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">account_balance</span>
-                  Entrada Bancaria Manual
-                </h3>
-              </div>
-              <div className="p-md">
-                <FormPagoManual corredores={corredores} onSuccess={refetch} />
-              </div>
-            </section>
-          </div>
-
-          <div className="col-span-12 lg:col-span-5 space-y-gutter">
-            <section className="bg-white border border-slate-200 rounded-xl">
-              <div className="p-md border-b border-slate-100">
-                <h3 className="font-headline-sm flex items-center gap-2">
-                  <span className="material-symbols-outlined text-tertiary">receipt_long</span>
-                  Añadir Gasto
-                </h3>
-              </div>
-              <div className="p-md">
-                <FormGasto onSuccess={refetch} />
-              </div>
-            </section>
+          <div className="bg-white border border-outline-variant/60 rounded-xl p-5 shadow-soft">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px] font-bold tracking-wider text-on-surface-variant">GASTOS PENDIENTES</p>
+              <span className="material-symbols-outlined text-tertiary text-[18px]">schedule</span>
+            </div>
+            <p className="text-3xl font-headline font-bold text-tertiary mt-2 tabular-nums tracking-tight">
+              ${fmt(totalGastosPendientes)}
+            </p>
+            <p className="text-[11px] text-on-surface-variant mt-1">{gastosPendientes.length} por aprobar</p>
           </div>
         </div>
 
-        <section className="mt-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-headline-sm text-on-surface">Pagos Sin Asignar</h3>
+        {/* Forms grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <FormCard icon="account_balance" iconBg="bg-info-container" iconText="text-info" title="Entrada bancaria manual">
+            <FormPagoManual corredores={corredores} onSuccess={refetch} />
+          </FormCard>
+          <FormCard icon="receipt_long" iconBg="bg-tertiary-container" iconText="text-tertiary" title="Añadir gasto">
+            <FormGasto onSuccess={refetch} />
+          </FormCard>
+        </div>
+
+        {/* Pagos sin asignar */}
+        <section className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-headline-sm font-headline text-on-surface">Pagos sin asignar</h3>
+            <span className="material-symbols-outlined text-tertiary text-[18px]">warning</span>
           </div>
           <PagosSinAsignar corredores={corredores} onReconciliado={refetch} />
         </section>
 
-        <section className="mt-lg bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-          <div className="p-md border-b border-slate-100 flex justify-between items-center">
-            <h3 className="font-headline-sm">Libro Maestro de Transacciones</h3>
+        {/* Libro maestro */}
+        <section className="bg-white border border-outline-variant/60 rounded-xl overflow-hidden shadow-soft">
+          <div className="px-5 py-4 border-b border-outline-variant/40 flex justify-between items-center">
+            <div>
+              <h3 className="text-headline-sm font-headline text-on-surface">Libro maestro</h3>
+              <p className="text-xs text-on-surface-variant mt-0.5">Todas las transacciones registradas</p>
+            </div>
           </div>
           <TablaTransacciones transacciones={transacciones} loading={loading} onRefund={handleRefund} />
-          <div className="p-4 bg-slate-50 text-center border-t border-slate-100">
-            <p className="text-sm text-outline">
-              Mostrando {transacciones.length} transacciones
-            </p>
+          <div className="px-5 py-3 bg-surface-container-low/40 border-t border-outline-variant/40 text-xs text-on-surface-variant">
+            Mostrando <span className="font-semibold text-on-surface">{transacciones.length}</span> transacciones
           </div>
         </section>
       </Layout>
     </>
+  );
+}
+
+function FormCard({
+  icon, iconBg, iconText, title, children,
+}: { icon: string; iconBg: string; iconText: string; title: string; children: React.ReactNode }) {
+  return (
+    <section className="bg-white border border-outline-variant/60 rounded-xl shadow-soft overflow-hidden">
+      <div className="px-5 py-4 border-b border-outline-variant/40 flex items-center gap-2.5">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${iconBg}`}>
+          <span className={`material-symbols-outlined text-[20px] ${iconText}`}>{icon}</span>
+        </div>
+        <h3 className="text-headline-sm font-headline text-on-surface">{title}</h3>
+      </div>
+      <div className="p-5">{children}</div>
+    </section>
   );
 }
