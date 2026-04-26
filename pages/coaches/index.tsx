@@ -67,52 +67,61 @@ export default function CoachesPage() {
     <>
       <Head><title>Wave One — Coaches</title></Head>
       <Layout>
-        <div className="space-y-8">
-          <h2 className="text-headline-lg text-on-surface font-headline">Coaches</h2>
+        <div className="space-y-6">
+          <div>
+            <p className="text-label-caps text-on-surface-variant mb-2">EQUIPO</p>
+            <h2 className="text-headline-lg text-on-background font-headline">Coaches</h2>
+            <p className="text-body-md text-on-surface-variant mt-1">
+              Entrenadores activos y sus equipos asignados.
+            </p>
+          </div>
 
           {loading ? (
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />
+                <div key={i} className="h-32 bg-white border border-outline-variant/60 rounded-xl animate-pulse" />
               ))}
             </div>
+          ) : coaches.length === 0 ? (
+            <div className="bg-white border border-outline-variant/60 rounded-xl p-12 text-center shadow-soft">
+              <span className="material-symbols-outlined text-4xl text-outline">sports</span>
+              <p className="text-sm text-on-surface-variant mt-2">No hay coaches registrados.</p>
+            </div>
           ) : (
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-surface-container-lowest border-b border-slate-100">
-                    {["NOMBRE", "EMAIL", "CORREDORES", "ACTIVOS", ""].map((h) => (
-                      <th key={h} className="px-6 py-4 font-label-caps text-on-surface-variant text-xs">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {coaches.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-outline text-sm">
-                        No hay coaches registrados.
-                      </td>
-                    </tr>
-                  )}
-                  {coaches.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-on-surface text-sm">{c.nombre}</td>
-                      <td className="px-6 py-4 text-sm text-slate-500">{c.email}</td>
-                      <td className="px-6 py-4 text-sm text-slate-500">{c.totalCorredores}</td>
-                      <td className="px-6 py-4 text-sm text-secondary font-semibold">{c.corredoresActivos}</td>
-                      <td className="px-6 py-4">
-                        <Link
-                          href={`/coaches/${c.id}`}
-                          className="text-sm text-primary hover:underline flex items-center gap-1"
-                        >
-                          Ver detalle
-                          <span className="material-symbols-outlined text-sm">chevron_right</span>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {coaches.map((c) => {
+                const initials = c.nombre.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+                return (
+                  <Link
+                    key={c.id}
+                    href={`/coaches/${c.id}`}
+                    className="group bg-white border border-outline-variant/60 rounded-xl p-5 shadow-soft hover:shadow-elev hover:border-outline transition-all"
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-fixed text-white flex items-center justify-center font-bold flex-shrink-0">
+                        {initials || "?"}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-headline-sm font-headline text-on-surface truncate">{c.nombre}</h3>
+                        <p className="text-xs text-on-surface-variant truncate">{c.email}</p>
+                      </div>
+                      <span className="material-symbols-outlined text-outline group-hover:text-accent group-hover:translate-x-0.5 transition-all">
+                        arrow_forward
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-4 border-t border-outline-variant/40">
+                      <div>
+                        <p className="text-[10px] font-bold tracking-wider text-on-surface-variant">CORREDORES</p>
+                        <p className="text-2xl font-headline font-bold text-on-surface tabular-nums">{c.totalCorredores}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold tracking-wider text-on-surface-variant">ACTIVOS</p>
+                        <p className="text-2xl font-headline font-bold text-secondary tabular-nums">{c.corredoresActivos}</p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

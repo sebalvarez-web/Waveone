@@ -8,11 +8,11 @@ import type { Transaccion } from "@/types/database";
 
 type Tab = "todos" | "stripe" | "paypal" | "manual" | "sin_asignar";
 
-const FUENTE_BADGE: Record<string, { label: string; color: string }> = {
-  stripe:       { label: "Stripe",       color: "bg-[#635bff] text-white" },
-  paypal:       { label: "PayPal",       color: "bg-[#0070ba] text-white" },
-  transferencia:{ label: "Transferencia",color: "bg-secondary text-white" },
-  efectivo:     { label: "Efectivo",     color: "bg-slate-500 text-white" },
+const FUENTE_BADGE: Record<string, { label: string; bg: string; text: string }> = {
+  stripe:        { label: "Stripe",        bg: "bg-[#635bff]/10",   text: "text-[#635bff]" },
+  paypal:        { label: "PayPal",        bg: "bg-[#0070ba]/10",   text: "text-[#0070ba]" },
+  transferencia: { label: "Transferencia", bg: "bg-secondary-container", text: "text-on-secondary-container" },
+  efectivo:      { label: "Efectivo",      bg: "bg-surface-container",   text: "text-on-surface-variant" },
 };
 
 function fmt(n: number) {
@@ -20,23 +20,26 @@ function fmt(n: number) {
 }
 
 function BadgeFuente({ metodo }: { metodo: string }) {
-  const b = FUENTE_BADGE[metodo] ?? { label: metodo, color: "bg-slate-300 text-on-surface" };
+  const b = FUENTE_BADGE[metodo] ?? { label: metodo, bg: "bg-surface-container", text: "text-on-surface-variant" };
   return (
-    <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wide ${b.color}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${b.bg} ${b.text}`}>
       {b.label}
     </span>
   );
 }
 
 function BadgeEstado({ estado }: { estado: string }) {
-  const map: Record<string, string> = {
-    pagado:   "bg-secondary/10 text-secondary",
-    pendiente:"bg-yellow-100 text-yellow-700",
-    vencido:  "bg-red-100 text-red-600",
+  const map: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+    pagado:      { bg: "bg-secondary-container", text: "text-on-secondary-container", dot: "bg-secondary",  label: "Pagado" },
+    pendiente:   { bg: "bg-tertiary-container",  text: "text-on-tertiary-container",  dot: "bg-tertiary",   label: "Pendiente" },
+    vencido:     { bg: "bg-error-container",     text: "text-on-error-container",     dot: "bg-error",      label: "Vencido" },
+    reembolsado: { bg: "bg-info-container",      text: "text-info",                   dot: "bg-info",       label: "Reembolsado" },
   };
+  const cfg = map[estado] ?? { bg: "bg-surface-container", text: "text-on-surface-variant", dot: "bg-outline", label: estado };
   return (
-    <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wide ${map[estado] ?? "bg-slate-100 text-slate-600"}`}>
-      {estado}
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold ${cfg.bg} ${cfg.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
     </span>
   );
 }
@@ -45,41 +48,46 @@ function TablaPagos({ rows, loading }: { rows: Transaccion[]; loading: boolean }
   if (loading) {
     return (
       <div className="p-6 space-y-2">
-        {[1,2,3,4].map(i => <div key={i} className="h-12 bg-slate-100 rounded-lg animate-pulse" />)}
+        {[1,2,3,4].map(i => <div key={i} className="h-12 bg-surface-container-low rounded-lg animate-pulse" />)}
       </div>
     );
   }
   if (rows.length === 0) {
     return (
-      <div className="p-10 text-center text-outline text-sm">Sin registros para este filtro.</div>
+      <div className="p-12 text-center">
+        <div className="flex flex-col items-center gap-2 text-on-surface-variant">
+          <span className="material-symbols-outlined text-3xl text-outline">receipt_long</span>
+          <p className="text-sm">Sin registros para este filtro.</p>
+        </div>
+      </div>
     );
   }
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm tabular-nums">
         <thead>
-          <tr className="border-b border-slate-100 text-left">
-            <th className="px-4 py-3 text-label-caps text-on-surface-variant font-semibold">Fecha</th>
-            <th className="px-4 py-3 text-label-caps text-on-surface-variant font-semibold">Corredor</th>
-            <th className="px-4 py-3 text-label-caps text-on-surface-variant font-semibold">Descripción</th>
-            <th className="px-4 py-3 text-label-caps text-on-surface-variant font-semibold">Fuente</th>
-            <th className="px-4 py-3 text-label-caps text-on-surface-variant font-semibold">Estado</th>
-            <th className="px-4 py-3 text-label-caps text-on-surface-variant font-semibold text-right">Monto</th>
+          <tr className="border-b border-outline-variant/40 text-left bg-surface-container-low/40">
+            <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">FECHA</th>
+            <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">CORREDOR</th>
+            <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">DESCRIPCIÓN</th>
+            <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">FUENTE</th>
+            <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">ESTADO</th>
+            <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant text-right">MONTO</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-outline-variant/30">
           {rows.map(t => (
-            <tr key={t.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-              <td className="px-4 py-3 text-outline whitespace-nowrap">
-                {new Date(t.fecha).toLocaleDateString("es-MX")}
+            <tr key={t.id} className="hover:bg-surface-container-low/40 transition-colors">
+              <td className="px-5 py-3.5 text-on-surface-variant whitespace-nowrap font-mono text-xs">
+                {new Date(t.fecha).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
               </td>
-              <td className="px-4 py-3 text-on-surface font-medium">
-                {t.corredor?.nombre ?? <span className="text-outline italic">Sin asignar</span>}
+              <td className="px-5 py-3.5 text-on-surface font-semibold">
+                {t.corredor?.nombre ?? <span className="text-outline italic font-normal">Sin asignar</span>}
               </td>
-              <td className="px-4 py-3 text-on-surface-variant max-w-xs truncate">{t.descripcion}</td>
-              <td className="px-4 py-3"><BadgeFuente metodo={t.metodo} /></td>
-              <td className="px-4 py-3"><BadgeEstado estado={t.estado} /></td>
-              <td className="px-4 py-3 text-right font-data-mono text-on-surface font-semibold">
+              <td className="px-5 py-3.5 text-on-surface-variant max-w-xs truncate">{t.descripcion}</td>
+              <td className="px-5 py-3.5"><BadgeFuente metodo={t.metodo} /></td>
+              <td className="px-5 py-3.5"><BadgeEstado estado={t.estado} /></td>
+              <td className="px-5 py-3.5 text-right font-mono text-on-surface font-semibold">
                 ${fmt(Number(t.monto))}
               </td>
             </tr>
@@ -110,85 +118,72 @@ export default function PagosPage() {
     sin_asignar: [],
   };
 
-  const TABS: { id: Tab; label: string; count?: number }[] = [
-    { id: "todos",       label: "Todos",         count: ingresos.length },
-    { id: "stripe",      label: "Stripe",        count: filtered.stripe.length },
-    { id: "paypal",      label: "PayPal",        count: filtered.paypal.length },
-    { id: "manual",      label: "Manual/Banco",  count: filtered.manual.length },
-    { id: "sin_asignar", label: "Sin Asignar" },
+  const TABS: { id: Tab; label: string; count?: number; icon: string }[] = [
+    { id: "todos",       label: "Todos",        count: ingresos.length,         icon: "list" },
+    { id: "stripe",      label: "Stripe",       count: filtered.stripe.length,  icon: "credit_card" },
+    { id: "paypal",      label: "PayPal",       count: filtered.paypal.length,  icon: "account_balance" },
+    { id: "manual",      label: "Manual/Banco", count: filtered.manual.length,  icon: "account_balance_wallet" },
+    { id: "sin_asignar", label: "Sin asignar",                                  icon: "warning" },
   ];
 
   return (
     <>
       <Head><title>Wave One — Pagos</title></Head>
       <Layout>
-        <div className="mb-8">
+        <div className="mb-6">
+          <p className="text-label-caps text-on-surface-variant mb-2">FINANZAS</p>
           <h2 className="text-headline-lg text-on-background font-headline">Pagos</h2>
-          <p className="text-body-lg text-on-surface-variant">
+          <p className="text-body-md text-on-surface-variant mt-1">
             Consolidado de ingresos por Stripe, PayPal y entradas bancarias manuales.
           </p>
         </div>
 
-        {/* Tarjetas de resumen */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-8">
-          <div className="bg-white border border-slate-200 rounded-xl p-md">
-            <p className="text-label-caps text-on-surface-variant mb-1">STRIPE</p>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#635bff]" />
-              <span className="text-headline-sm font-headline text-on-surface">${fmt(totalStripe)}</span>
-            </div>
-            <p className="text-[11px] text-outline mt-1">{filtered.stripe.length} cobros</p>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-xl p-md">
-            <p className="text-label-caps text-on-surface-variant mb-1">PAYPAL</p>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#0070ba]" />
-              <span className="text-headline-sm font-headline text-on-surface">${fmt(totalPaypal)}</span>
-            </div>
-            <p className="text-[11px] text-outline mt-1">{filtered.paypal.length} cobros</p>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-xl p-md">
-            <p className="text-label-caps text-on-surface-variant mb-1">MANUAL / BANCO</p>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-secondary" />
-              <span className="text-headline-sm font-headline text-on-surface">${fmt(totalManual)}</span>
-            </div>
-            <p className="text-[11px] text-outline mt-1">{filtered.manual.length} entradas</p>
-          </div>
-          <div className="bg-primary text-white rounded-xl p-md">
-            <p className="text-label-caps text-white/70 mb-1">TOTAL CONSOLIDADO</p>
-            <span className="text-headline-sm font-headline">${fmt(totalConsolidado)}</span>
-            <p className="text-[11px] text-white/60 mt-1">{ingresos.length} transacciones</p>
+        {/* KPIs */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <KpiPago color="#635bff" label="STRIPE" total={totalStripe} count={filtered.stripe.length} />
+          <KpiPago color="#0070ba" label="PAYPAL" total={totalPaypal} count={filtered.paypal.length} />
+          <KpiPago color="#059669" label="MANUAL / BANCO" total={totalManual} count={filtered.manual.length} sub="entradas" />
+          <div className="bg-primary text-white rounded-xl p-4 shadow-soft relative overflow-hidden">
+            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-accent/20 blur-2xl" />
+            <p className="text-[10px] font-bold tracking-wider text-white/70 relative">TOTAL CONSOLIDADO</p>
+            <p className="text-3xl font-headline font-bold mt-2 tabular-nums tracking-tight relative">
+              ${fmt(totalConsolidado)}
+            </p>
+            <p className="text-[11px] text-white/60 mt-1 relative">{ingresos.length} transacciones</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-          <div className="flex border-b border-slate-100 overflow-x-auto">
+        <div className="bg-white border border-outline-variant/60 rounded-xl overflow-hidden shadow-soft">
+          <div className="flex border-b border-outline-variant/40 overflow-x-auto bg-surface-container-low/40">
             {TABS.map(t => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`px-5 py-3.5 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
+                className={`relative px-4 py-3 text-sm font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
                   tab === t.id
-                    ? "border-primary text-primary"
-                    : "border-transparent text-on-surface-variant hover:text-on-surface"
+                    ? "text-on-surface bg-white"
+                    : "text-on-surface-variant hover:text-on-surface"
                 }`}
               >
+                <span className="material-symbols-outlined text-[16px]">{t.icon}</span>
                 {t.label}
                 {t.count !== undefined && (
-                  <span className={`ml-2 text-[11px] px-1.5 py-0.5 rounded-full ${
-                    tab === t.id ? "bg-primary/10 text-primary" : "bg-slate-100 text-outline"
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    tab === t.id ? "bg-accent-soft text-accent" : "bg-surface-container text-on-surface-variant"
                   }`}>
                     {t.count}
                   </span>
+                )}
+                {tab === t.id && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
                 )}
               </button>
             ))}
           </div>
 
           {tab === "sin_asignar" ? (
-            <div className="p-md">
+            <div className="p-5">
               <PagosSinAsignar corredores={corredores} onReconciliado={refetch} />
             </div>
           ) : (
@@ -197,5 +192,22 @@ export default function PagosPage() {
         </div>
       </Layout>
     </>
+  );
+}
+
+function KpiPago({ color, label, total, count, sub }: { color: string; label: string; total: number; count: number; sub?: string }) {
+  return (
+    <div className="bg-white border border-outline-variant/60 rounded-xl p-4 shadow-soft">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+        <p className="text-[10px] font-bold tracking-wider text-on-surface-variant">{label}</p>
+      </div>
+      <p className="text-2xl font-headline font-bold text-on-surface tabular-nums tracking-tight">
+        ${fmt(total)}
+      </p>
+      <p className="text-[11px] text-on-surface-variant mt-1">
+        {count} {sub ?? "cobros"}
+      </p>
+    </div>
   );
 }

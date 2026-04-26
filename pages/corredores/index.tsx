@@ -52,93 +52,89 @@ export default function CorredoresPage() {
 
   const activos = corredores.filter((c) => c.estado === "activo").length;
   const uniformesPendientes = corredores.filter((c) => !c.uniforme_entregado).length;
+  const hasFilters = filtroEstado || filtroEntrenador || filtroPlan;
+
+  const stats = [
+    { label: "TOTAL", value: corredores.length, icon: "groups", tone: "neutral" as const },
+    { label: "ACTIVOS", value: activos, icon: "directions_run", tone: "success" as const },
+    { label: "UNIFORMES PENDIENTES", value: uniformesPendientes, icon: "checkroom", tone: "warning" as const },
+    { label: "INACTIVOS", value: corredores.filter((c) => c.estado === "inactivo").length, icon: "person_off", tone: "neutral" as const },
+  ];
 
   return (
     <>
       <Head><title>Wave One — Corredores</title></Head>
       <Layout onSearch={setSearch}>
-        <div className="space-y-8">
-          <div className="flex justify-between items-end">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-wrap justify-between items-end gap-4">
             <div>
-              <h2 className="text-headline-lg text-on-surface font-headline">
-                Base de Datos de Corredores
-              </h2>
-              <p className="text-body-lg text-outline mt-1">
-                Gestiona {corredores.length} miembros activos y su logística de entrenamiento.
+              <p className="text-label-caps text-on-surface-variant mb-2">EQUIPO</p>
+              <h2 className="text-headline-lg text-on-background font-headline">Corredores</h2>
+              <p className="text-body-md text-on-surface-variant mt-1">
+                Gestiona {corredores.length} miembro{corredores.length === 1 ? "" : "s"} y su logística de entrenamiento.
               </p>
             </div>
-            <div className="flex gap-3">
-              <button className="px-4 py-2 border border-slate-200 rounded-lg flex items-center gap-2 bg-white text-slate-600 hover:bg-slate-50 text-sm">
-                <span className="material-symbols-outlined text-[20px]">file_download</span>
+            <div className="flex gap-2">
+              <button className="px-3.5 py-2.5 bg-white border border-outline-variant rounded-lg flex items-center gap-2 text-sm font-semibold text-on-surface hover:bg-surface-container-low transition-colors">
+                <span className="material-symbols-outlined text-[18px]">file_download</span>
                 Exportar
               </button>
               <button
                 onClick={() => setShowForm(true)}
-                className="px-4 py-2 bg-primary text-white rounded-lg flex items-center gap-2 text-sm font-semibold hover:opacity-90"
+                className="px-3.5 py-2.5 bg-primary text-white rounded-lg flex items-center gap-2 text-sm font-semibold hover:bg-primary-fixed transition-colors shadow-soft"
               >
-                <span className="material-symbols-outlined text-[20px]">add</span>
-                Añadir Corredor
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                Añadir corredor
               </button>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <select
+          {/* Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {stats.map((s) => (
+              <StatCard key={s.label} {...s} />
+            ))}
+          </div>
+
+          {/* Filters */}
+          <div className="bg-white border border-outline-variant/60 rounded-xl px-4 py-3 flex flex-wrap items-center gap-2 shadow-soft">
+            <span className="material-symbols-outlined text-on-surface-variant text-[18px]">filter_alt</span>
+            <FilterSelect
               value={filtroEstado}
-              onChange={(e) => setFiltroEstado(e.target.value as CorredorEstado | "")}
-              className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
-            >
-              <option value="">Todos los estados</option>
-              <option value="activo">Activo</option>
-              <option value="pausado">Pausado</option>
-              <option value="inactivo">Inactivo</option>
-            </select>
-
-            <select
+              onChange={(v) => setFiltroEstado(v as CorredorEstado | "")}
+              options={[
+                { value: "", label: "Todos los estados" },
+                { value: "activo", label: "Activo" },
+                { value: "pausado", label: "Pausado" },
+                { value: "inactivo", label: "Inactivo" },
+              ]}
+            />
+            <FilterSelect
               value={filtroEntrenador}
-              onChange={(e) => setFiltroEntrenador(e.target.value)}
-              className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
-            >
-              <option value="">Todos los entrenadores</option>
-              {entrenadores.map((e) => (
-                <option key={e.id} value={e.id}>{e.nombre}</option>
-              ))}
-            </select>
-
-            <select
+              onChange={setFiltroEntrenador}
+              options={[
+                { value: "", label: "Todos los entrenadores" },
+                ...entrenadores.map((e) => ({ value: e.id, label: e.nombre })),
+              ]}
+            />
+            <FilterSelect
               value={filtroPlan}
-              onChange={(e) => setFiltroPlan(e.target.value)}
-              className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
-            >
-              <option value="">Todos los planes</option>
-              {planes.map((p) => (
-                <option key={p.id} value={p.id}>{p.nombre}</option>
-              ))}
-            </select>
-
-            {(filtroEstado || filtroEntrenador || filtroPlan) && (
+              onChange={setFiltroPlan}
+              options={[
+                { value: "", label: "Todos los planes" },
+                ...planes.map((p) => ({ value: p.id, label: p.nombre })),
+              ]}
+            />
+            {hasFilters && (
               <button
                 onClick={() => { setFiltroEstado(""); setFiltroEntrenador(""); setFiltroPlan(""); }}
-                className="text-sm text-outline hover:text-error flex items-center gap-1"
+                className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-on-surface-variant hover:text-error transition-colors"
               >
                 <span className="material-symbols-outlined text-sm">close</span>
                 Limpiar filtros
               </button>
             )}
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
-            {[
-              { label: "Total Corredores", value: corredores.length, color: "text-on-surface" },
-              { label: "Activos", value: activos, color: "text-secondary" },
-              { label: "Uniformes Pendientes", value: uniformesPendientes, color: "text-tertiary" },
-              { label: "Inactivos", value: corredores.filter((c) => c.estado === "inactivo").length, color: "text-slate-500" },
-            ].map((s) => (
-              <div key={s.label} className="bg-white p-6 rounded-xl border border-slate-200">
-                <p className="text-label-caps text-slate-400 uppercase mb-2">{s.label}</p>
-                <span className={`text-headline-md font-headline ${s.color}`}>{s.value}</span>
-              </div>
-            ))}
           </div>
 
           <TablaCorredores
@@ -159,5 +155,58 @@ export default function CorredoresPage() {
         )}
       </Layout>
     </>
+  );
+}
+
+interface StatCardProps {
+  label: string;
+  value: number;
+  icon: string;
+  tone: "neutral" | "success" | "warning";
+}
+
+function StatCard({ label, value, icon, tone }: StatCardProps) {
+  const tones = {
+    neutral: "text-on-surface bg-surface-container-low",
+    success: "text-secondary bg-secondary-container",
+    warning: "text-tertiary bg-tertiary-container",
+  };
+  return (
+    <div className="bg-white border border-outline-variant/60 rounded-xl p-4 shadow-soft">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold tracking-wider text-on-surface-variant">{label}</p>
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${tones[tone]}`}>
+          <span className="material-symbols-outlined text-[16px]">{icon}</span>
+        </div>
+      </div>
+      <p className="text-3xl font-headline font-bold text-on-surface mt-2 tabular-nums tracking-tight">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+interface FilterSelectProps {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}
+
+function FilterSelect({ value, onChange, options }: FilterSelectProps) {
+  const isActive = value !== "";
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={`border rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-accent/15 transition-all cursor-pointer ${
+        isActive
+          ? "bg-accent-soft border-accent/30 text-on-background"
+          : "bg-white border-outline-variant text-on-surface-variant hover:border-outline"
+      }`}
+    >
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>{o.label}</option>
+      ))}
+    </select>
   );
 }
