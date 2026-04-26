@@ -21,9 +21,7 @@ export function useTransacciones({ limit = 50, corredorId, soloIngresoPagado = f
       .select(`*, corredor:corredores(id, nombre)`)
       .order("fecha", { ascending: false });
 
-    if (!soloIngresoPagado) {
-      query = query.limit(limit);
-    }
+    query = query.limit(soloIngresoPagado ? 50000 : limit);
 
     if (corredorId) {
       query = query.eq("corredor_id", corredorId);
