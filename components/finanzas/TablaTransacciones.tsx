@@ -9,6 +9,7 @@ const ESTADO_BADGE: Record<string, string> = {
   pagado: "bg-secondary/10 text-secondary",
   vencido: "bg-tertiary/10 text-tertiary",
   pendiente: "bg-primary/10 text-primary",
+  reembolsado: "bg-slate-100 text-slate-500",
 };
 
 const FUENTE_DOT: Record<string, string> = {

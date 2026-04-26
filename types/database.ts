@@ -2,7 +2,7 @@ export type UserRol = "admin" | "entrenador";
 export type CorredorEstado = "activo" | "pausado" | "inactivo";
 export type TransaccionTipo = "ingreso" | "gasto";
 export type TransaccionMetodo = "stripe" | "paypal" | "transferencia" | "efectivo";
-export type TransaccionEstado = "pagado" | "pendiente" | "vencido";
+export type TransaccionEstado = "pagado" | "pendiente" | "vencido" | "reembolsado";
 export type PagoFuente = "stripe" | "paypal";
 
 export interface User {
