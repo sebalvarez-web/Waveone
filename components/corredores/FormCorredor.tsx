@@ -100,6 +100,7 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
           setLoading(false);
           return;
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { estado: _estado, ...restoPayload } = payload;
         const { error } = await supabase
           .from("corredores")
