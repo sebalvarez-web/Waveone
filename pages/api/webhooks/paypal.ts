@@ -136,6 +136,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (upsertErr) throw new Error(`DB error: ${upsertErr.message}`);
       }
     }
+
+    if (body.event_type === "PAYMENT.SALE.REVERSED") {
+      const saleId = body.resource.id;
+      await supabase
+        .from("transacciones")
+        .update({ estado: "reembolsado" })
+        .eq("paypal_order_id", saleId);
+    }
   } catch (err) {
     console.error("Error procesando webhook PayPal:", err);
     return res.status(500).json({ error: "Error interno" });

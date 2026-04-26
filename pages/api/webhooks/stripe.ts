@@ -50,6 +50,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const invoice = event.data.object as Stripe.Invoice;
       await handlePaymentFailed(supabase, invoice);
     }
+
+    if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      const paymentIntentId = charge.payment_intent as string | null;
+      if (paymentIntentId) {
+        await supabase
+          .from("transacciones")
+          .update({ estado: "reembolsado" })
+          .eq("stripe_payment_id", paymentIntentId);
+      }
+    }
   } catch (err) {
     console.error("Error procesando webhook Stripe:", err);
     return res.status(500).json({ error: "Error interno" });

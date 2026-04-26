@@ -3,6 +3,7 @@ import type { Transaccion } from "@/types/database";
 interface TablaTransaccionesProps {
   transacciones: Transaccion[];
   loading: boolean;
+  onRefund?: (id: string) => Promise<void>;
 }
 
 const ESTADO_BADGE: Record<string, string> = {
@@ -19,7 +20,7 @@ const FUENTE_DOT: Record<string, string> = {
   efectivo: "bg-slate-300",
 };
 
-export function TablaTransacciones({ transacciones, loading }: TablaTransaccionesProps) {
+export function TablaTransacciones({ transacciones, loading, onRefund }: TablaTransaccionesProps) {
   if (loading) {
     return (
       <div className="space-y-2">
@@ -34,7 +35,7 @@ export function TablaTransacciones({ transacciones, loading }: TablaTransaccione
     <table className="w-full text-left border-collapse">
       <thead>
         <tr className="bg-surface-container-lowest border-b border-slate-100">
-          {["FECHA", "ENTIDAD", "CATEGORÍA", "CANTIDAD", "ESTADO", "FUENTE"].map((h) => (
+          {["FECHA", "ENTIDAD", "CATEGORÍA", "CANTIDAD", "ESTADO", "FUENTE", ...(onRefund ? ["ACCIONES"] : [])].map((h) => (
             <th key={h} className="px-md py-4 font-label-caps text-on-surface-variant text-xs">
               {h}
             </th>
@@ -74,6 +75,23 @@ export function TablaTransacciones({ transacciones, loading }: TablaTransaccione
                 <span className="text-[11px] font-medium text-slate-400 capitalize">{t.metodo}</span>
               </div>
             </td>
+            {onRefund && (
+              <td className="px-md py-4">
+                {t.estado === "pagado" && (
+                  <button
+                    onClick={async () => {
+                      if (confirm(`¿Marcar como reembolsado el pago de $${Number(t.monto).toFixed(2)}?`)) {
+                        await onRefund(t.id);
+                      }
+                    }}
+                    className="text-xs text-outline hover:text-error flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-sm">undo</span>
+                    Reembolsar
+                  </button>
+                )}
+              </td>
+            )}
           </tr>
         ))}
       </tbody>
