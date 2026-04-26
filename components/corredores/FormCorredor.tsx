@@ -88,14 +88,38 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
     let corredorId = corredor?.id;
 
     if (isEditing) {
-      const { error } = await supabase
-        .from("corredores")
-        .update(payload)
-        .eq("id", corredor.id);
-      if (error) {
-        toast.error("Error al guardar el corredor");
-        setLoading(false);
-        return;
+      const estaDesactivando =
+        form.estado === "inactivo" && corredor.estado !== "inactivo";
+
+      if (estaDesactivando) {
+        const response = await fetch(`/api/corredores/${corredor.id}/desactivar`, {
+          method: "POST",
+        });
+        if (!response.ok) {
+          toast.error("Error al desactivar el corredor");
+          setLoading(false);
+          return;
+        }
+        const { estado: _estado, ...restoPayload } = payload;
+        const { error } = await supabase
+          .from("corredores")
+          .update(restoPayload)
+          .eq("id", corredor.id);
+        if (error) {
+          toast.error("Error al actualizar datos del corredor");
+          setLoading(false);
+          return;
+        }
+      } else {
+        const { error } = await supabase
+          .from("corredores")
+          .update(payload)
+          .eq("id", corredor.id);
+        if (error) {
+          toast.error("Error al guardar el corredor");
+          setLoading(false);
+          return;
+        }
       }
     } else {
       const { data, error } = await supabase
