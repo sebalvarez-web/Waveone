@@ -16,19 +16,25 @@ export interface DeudaCorredor {
   mesesDeudaCount: number;
 }
 
+function parseDateStr(s: string): { y: number; m: number } {
+  const parts = s.split("T")[0].split("-").map(Number);
+  return { y: parts[0], m: parts[1] - 1 }; // m is 0-indexed
+}
+
 function monthRange(
   desde: string,
   hasta?: string
 ): Array<{ year: number; month: number }> {
-  const inicio = new Date(desde);
-  const fin = hasta ? new Date(hasta) : new Date();
+  const start = parseDateStr(desde);
+  const now = new Date();
+  const end = hasta
+    ? parseDateStr(hasta)
+    : { y: now.getFullYear(), m: now.getMonth() };
+
   const result: Array<{ year: number; month: number }> = [];
-  let y = inicio.getFullYear();
-  let m = inicio.getMonth();
-  while (
-    y < fin.getFullYear() ||
-    (y === fin.getFullYear() && m <= fin.getMonth())
-  ) {
+  let y = start.y;
+  let m = start.m;
+  while (y < end.y || (y === end.y && m <= end.m)) {
     result.push({ year: y, month: m });
     m++;
     if (m > 11) { m = 0; y++; }

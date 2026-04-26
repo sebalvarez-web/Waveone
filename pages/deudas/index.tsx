@@ -167,7 +167,8 @@ export default function DeudasPage() {
                         const mes = meses.find(m => m.year === year && m.month === month);
                         const estado = mes?.estado ?? "futuro";
                         // Corredor hadn't joined yet
-                        const antesDeIngreso = new Date(corredor.fecha_ingreso) > new Date(year, month + 1, 0);
+                        const [iy, im] = corredor.fecha_ingreso.split("T")[0].split("-").map(Number);
+                        const antesDeIngreso = new Date(iy, im - 1, 1) > new Date(year, month + 1, 0);
                         if (antesDeIngreso) {
                           return <td key={`${year}-${month}`} className="px-1 py-3 text-center" />;
                         }
