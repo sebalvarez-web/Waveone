@@ -36,7 +36,7 @@ export function Sidebar({ pagosSinAsignar }: SidebarProps) {
     <aside className="fixed left-0 top-0 h-screen w-60 border-r border-slate-200 bg-white z-50 flex flex-col py-6">
       <div className="px-6 mb-8">
         <h1 className="text-xl font-bold text-primary font-headline tracking-tight">
-          RunTeam Pro
+          Wave One
         </h1>
         <p className="text-label-caps text-outline tracking-widest mt-1">
           Gestión Administrativa

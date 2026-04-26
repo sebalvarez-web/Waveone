@@ -44,7 +44,7 @@ export default function SignupPage() {
   return (
     <>
       <Head>
-        <title>RunTeam Pro — Crear cuenta</title>
+        <title>Wave One — Crear cuenta</title>
         <link
           href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&display=swap"
           rel="stylesheet"
@@ -58,7 +58,7 @@ export default function SignupPage() {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <h1 className="text-headline-md font-headline text-primary">
-              RunTeam Pro
+              Wave One
             </h1>
             <p className="text-body-md text-outline mt-1">
               Panel de Administración

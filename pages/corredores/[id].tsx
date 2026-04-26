@@ -127,7 +127,7 @@ export default function CorredorPerfilPage() {
 
   return (
     <>
-      <Head><title>RunTeam Pro — {corredor.nombre}</title></Head>
+      <Head><title>Wave One — {corredor.nombre}</title></Head>
       <Layout>
         <div className="mb-8 flex justify-between items-end">
           <div>

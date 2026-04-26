@@ -36,7 +36,7 @@ export default function CorredoresPage() {
 
   return (
     <>
-      <Head><title>RunTeam Pro — Corredores</title></Head>
+      <Head><title>Wave One — Corredores</title></Head>
       <Layout onSearch={setSearch}>
         <div className="space-y-8">
           <div className="flex justify-between items-end">

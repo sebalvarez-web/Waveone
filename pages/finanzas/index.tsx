@@ -20,7 +20,7 @@ export default function FinanzasPage() {
 
   return (
     <>
-      <Head><title>RunTeam Pro — Finanzas</title></Head>
+      <Head><title>Wave One — Finanzas</title></Head>
       <Layout>
         <div className="flex justify-between items-end mb-8">
           <div>

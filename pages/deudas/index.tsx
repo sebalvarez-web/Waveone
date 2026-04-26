@@ -57,7 +57,7 @@ export default function DeudasPage() {
 
   return (
     <>
-      <Head><title>RunTeam Pro — Deudas</title></Head>
+      <Head><title>Wave One — Deudas</title></Head>
       <Layout>
         <div className="mb-8">
           <h2 className="text-headline-lg text-on-background font-headline">Control de Deudas</h2>
