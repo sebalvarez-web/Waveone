@@ -16,19 +16,46 @@ export function useTransacciones({ limit = 50, corredorId, soloIngresoPagado = f
 
   const fetchTransacciones = useCallback(async () => {
     setLoading(true);
+
+    if (soloIngresoPagado) {
+      // Paginar en batches de 1000 para evitar el max-rows default de Supabase
+      const PAGE = 1000;
+      const all: Transaccion[] = [];
+      let from = 0;
+      // Loop hasta que un batch venga incompleto (= ya no hay más filas)
+      // Cap de seguridad: 200 páginas (200k filas)
+      for (let i = 0; i < 200; i++) {
+        const { data, error: err } = await supabase
+          .from("transacciones")
+          .select(`*, corredor:corredores(id, nombre)`)
+          .eq("tipo", "ingreso")
+          .eq("estado", "pagado")
+          .order("fecha", { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (err) {
+          setError(err);
+          setTransacciones([]);
+          setLoading(false);
+          return;
+        }
+        const batch = data ?? [];
+        all.push(...(batch as Transaccion[]));
+        if (batch.length < PAGE) break;
+        from += PAGE;
+      }
+      setTransacciones(all);
+      setLoading(false);
+      return;
+    }
+
     let query = supabase
       .from("transacciones")
       .select(`*, corredor:corredores(id, nombre)`)
-      .order("fecha", { ascending: false });
-
-    query = query.limit(soloIngresoPagado ? 50000 : limit);
+      .order("fecha", { ascending: false })
+      .limit(limit);
 
     if (corredorId) {
       query = query.eq("corredor_id", corredorId);
-    }
-
-    if (soloIngresoPagado) {
-      query = query.eq("tipo", "ingreso").eq("estado", "pagado");
     }
 
     const { data, error: err } = await query;
