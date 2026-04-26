@@ -9,12 +9,14 @@ import { calcularDeudas, MESES_ES, type MesEstado } from "@/lib/deudas";
 const CELDA: Record<MesEstado, string> = {
   pagado: "bg-secondary/20 text-secondary",
   deuda:  "bg-red-100 text-red-600",
+  pausa:  "bg-slate-200 text-slate-600",
   futuro: "bg-slate-100 text-slate-300",
 };
 
 const TOOLTIP: Record<MesEstado, string> = {
   pagado: "Pagado",
   deuda:  "Adeudado",
+  pausa:  "Pausado",
   futuro: "Pendiente",
 };
 
@@ -57,7 +59,7 @@ export default function DeudasPage() {
 
   return (
     <>
-      <Head><title>RunTeam Pro — Deudas</title></Head>
+      <Head><title>Wave One — Deudas</title></Head>
       <Layout>
         <div className="mb-8">
           <h2 className="text-headline-lg text-on-background font-headline">Control de Deudas</h2>

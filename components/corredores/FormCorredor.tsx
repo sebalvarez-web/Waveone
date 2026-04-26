@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { toast } from "@/components/ui/Toast";
 import type { Corredor, Plan, CorredorEmail } from "@/types/database";
+import { usePausas } from "@/hooks/usePausas";
+import { MESES_ES } from "@/lib/deudas";
 
 interface EmailAdicional {
   email: string;
@@ -19,6 +21,14 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
   const supabase = useSupabaseClient();
   const user = useUser();
   const isEditing = !!corredor;
+
+  const { pausas, addPausa, removePausa } = usePausas(corredor?.id);
+  const [nuevaPausa, setNuevaPausa] = useState({
+    mes: new Date().getMonth() + 1,
+    año: new Date().getFullYear(),
+    tarifa_mantenimiento: 0,
+  });
+  const [addingPausa, setAddingPausa] = useState(false);
 
   const [form, setForm] = useState({
     nombre: corredor?.nombre ?? "",
@@ -78,14 +88,38 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
     let corredorId = corredor?.id;
 
     if (isEditing) {
-      const { error } = await supabase
-        .from("corredores")
-        .update(payload)
-        .eq("id", corredor.id);
-      if (error) {
-        toast.error("Error al guardar el corredor");
-        setLoading(false);
-        return;
+      const estaDesactivando =
+        form.estado === "inactivo" && corredor.estado !== "inactivo";
+
+      if (estaDesactivando) {
+        const response = await fetch(`/api/corredores/${corredor.id}/desactivar`, {
+          method: "POST",
+        });
+        if (!response.ok) {
+          toast.error("Error al desactivar el corredor");
+          setLoading(false);
+          return;
+        }
+        const { estado: _estado, ...restoPayload } = payload;
+        const { error } = await supabase
+          .from("corredores")
+          .update(restoPayload)
+          .eq("id", corredor.id);
+        if (error) {
+          toast.error("Error al actualizar datos del corredor");
+          setLoading(false);
+          return;
+        }
+      } else {
+        const { error } = await supabase
+          .from("corredores")
+          .update(payload)
+          .eq("id", corredor.id);
+        if (error) {
+          toast.error("Error al guardar el corredor");
+          setLoading(false);
+          return;
+        }
       }
     } else {
       const { data, error } = await supabase
@@ -220,6 +254,83 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
               </div>
             ))}
           </div>
+
+          {isEditing && (
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="font-label-caps text-outline text-xs">MESES DE PAUSA</label>
+                <button
+                  type="button"
+                  onClick={() => setAddingPausa(!addingPausa)}
+                  className="flex items-center gap-1 text-xs text-primary font-semibold hover:opacity-80"
+                >
+                  <span className="material-symbols-outlined text-sm">add</span>
+                  Agregar pausa
+                </button>
+              </div>
+
+              {addingPausa && (
+                <div className="flex gap-2 mb-3 p-3 bg-slate-50 rounded-lg">
+                  <select
+                    value={nuevaPausa.mes}
+                    onChange={(e) => setNuevaPausa(p => ({ ...p, mes: Number(e.target.value) }))}
+                    className="flex-1 border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                  >
+                    {MESES_ES.map((m, i) => (
+                      <option key={i} value={i + 1}>{m}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    placeholder="Año"
+                    value={nuevaPausa.año}
+                    onChange={(e) => setNuevaPausa(p => ({ ...p, año: Number(e.target.value) }))}
+                    className="w-24 border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Tarifa ($)"
+                    value={nuevaPausa.tarifa_mantenimiento}
+                    onChange={(e) => setNuevaPausa(p => ({ ...p, tarifa_mantenimiento: Number(e.target.value) }))}
+                    className="w-28 border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await addPausa(nuevaPausa.mes, nuevaPausa.año, nuevaPausa.tarifa_mantenimiento);
+                      setAddingPausa(false);
+                    }}
+                    className="bg-primary text-white rounded-lg px-3 py-2 text-sm font-semibold"
+                  >
+                    Guardar
+                  </button>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                {pausas.length === 0 && (
+                  <p className="text-xs text-outline italic">Sin meses de pausa registrados.</p>
+                )}
+                {pausas.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between text-sm bg-slate-50 px-3 py-2 rounded-lg">
+                    <span className="text-on-surface">
+                      {MESES_ES[p.mes - 1]} {p.año}
+                      {p.tarifa_mantenimiento > 0 && (
+                        <span className="text-outline ml-2">(${p.tarifa_mantenimiento} mantenimiento)</span>
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removePausa(p.id)}
+                      className="text-outline hover:text-error"
+                    >
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>

@@ -6,10 +6,22 @@ import { TablaTransacciones } from "@/components/finanzas/TablaTransacciones";
 import { useTransacciones } from "@/hooks/useTransacciones";
 import { useCorredores } from "@/hooks/useCorredores";
 import { PagosSinAsignar } from "@/components/pagos/PagosSinAsignar";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import toast from "react-hot-toast";
 
 export default function FinanzasPage() {
   const { transacciones, loading, refetch } = useTransacciones({ limit: 100 });
   const { corredores } = useCorredores();
+  const supabase = useSupabaseClient();
+
+  const handleRefund = async (id: string) => {
+    const { error } = await supabase
+      .from("transacciones")
+      .update({ estado: "reembolsado" })
+      .eq("id", id);
+    if (error) toast.error("Error al registrar reembolso");
+    else { toast.success("Reembolso registrado"); refetch(); }
+  };
 
   const ingresos = transacciones.filter((t) => t.tipo === "ingreso");
   const gastos = transacciones.filter((t) => t.tipo === "gasto");
@@ -20,7 +32,7 @@ export default function FinanzasPage() {
 
   return (
     <>
-      <Head><title>RunTeam Pro — Finanzas</title></Head>
+      <Head><title>Wave One — Finanzas</title></Head>
       <Layout>
         <div className="flex justify-between items-end mb-8">
           <div>
@@ -96,7 +108,7 @@ export default function FinanzasPage() {
           <div className="p-md border-b border-slate-100 flex justify-between items-center">
             <h3 className="font-headline-sm">Libro Maestro de Transacciones</h3>
           </div>
-          <TablaTransacciones transacciones={transacciones} loading={loading} />
+          <TablaTransacciones transacciones={transacciones} loading={loading} onRefund={handleRefund} />
           <div className="p-4 bg-slate-50 text-center border-t border-slate-100">
             <p className="text-sm text-outline">
               Mostrando {transacciones.length} transacciones

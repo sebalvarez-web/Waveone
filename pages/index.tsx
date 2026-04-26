@@ -21,7 +21,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Head><title>RunTeam Pro — Panel</title></Head>
+      <Head><title>Wave One — Panel</title></Head>
       <Layout>
         <div className="flex justify-between items-end mb-8">
           <div>

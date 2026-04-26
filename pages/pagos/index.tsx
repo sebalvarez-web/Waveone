@@ -120,7 +120,7 @@ export default function PagosPage() {
 
   return (
     <>
-      <Head><title>RunTeam Pro — Pagos</title></Head>
+      <Head><title>Wave One — Pagos</title></Head>
       <Layout>
         <div className="mb-8">
           <h2 className="text-headline-lg text-on-background font-headline">Pagos</h2>

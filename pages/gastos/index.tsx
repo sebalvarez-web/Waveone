@@ -88,7 +88,7 @@ export default function GastosPage() {
 
   return (
     <>
-      <Head><title>RunTeam Pro — Gastos</title></Head>
+      <Head><title>Wave One — Gastos</title></Head>
       <Layout>
         <div className="flex justify-between items-end mb-8">
           <div>

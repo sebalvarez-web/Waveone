@@ -1,12 +1,12 @@
-import type { Corredor, Transaccion } from "@/types/database";
+import type { Corredor, Transaccion, Pausa } from "@/types/database";
 
-export type MesEstado = "pagado" | "deuda" | "futuro";
+export type MesEstado = "pagado" | "deuda" | "pausa" | "futuro";
 
 export interface MesDeuda {
   year: number;
-  month: number; // 0-indexed
+  month: number;
   estado: MesEstado;
-  monto: number; // precio_mensual del plan (0 si sin plan)
+  monto: number;
 }
 
 export interface DeudaCorredor {
@@ -16,14 +16,19 @@ export interface DeudaCorredor {
   mesesDeudaCount: number;
 }
 
-/** Months from fecha_ingreso up to current month (inclusive) */
-function monthRange(desde: string): Array<{ year: number; month: number }> {
+function monthRange(
+  desde: string,
+  hasta?: string
+): Array<{ year: number; month: number }> {
   const inicio = new Date(desde);
-  const hoy = new Date();
+  const fin = hasta ? new Date(hasta) : new Date();
   const result: Array<{ year: number; month: number }> = [];
   let y = inicio.getFullYear();
   let m = inicio.getMonth();
-  while (y < hoy.getFullYear() || (y === hoy.getFullYear() && m <= hoy.getMonth())) {
+  while (
+    y < fin.getFullYear() ||
+    (y === fin.getFullYear() && m <= fin.getMonth())
+  ) {
     result.push({ year: y, month: m });
     m++;
     if (m > 11) { m = 0; y++; }
@@ -33,19 +38,21 @@ function monthRange(desde: string): Array<{ year: number; month: number }> {
 
 export function calcularDeudas(
   corredores: Corredor[],
-  transacciones: Transaccion[]
+  transacciones: Transaccion[],
+  pausas: Pausa[] = []
 ): DeudaCorredor[] {
   const hoy = new Date();
 
   return corredores
-    .filter(c => c.estado !== "inactivo")
     .map(corredor => {
       const precio = corredor.plan?.precio_mensual ?? 0;
       const ingresos = transacciones.filter(
-        t => t.corredor_id === corredor.id && t.tipo === "ingreso" && t.estado === "pagado"
+        t =>
+          t.corredor_id === corredor.id &&
+          t.tipo === "ingreso" &&
+          t.estado === "pagado"
       );
 
-      // Set of "year-month" keys that have a payment
       const pagadosSet = new Set(
         ingresos.map(t => {
           const d = new Date(t.fecha);
@@ -53,18 +60,37 @@ export function calcularDeudas(
         })
       );
 
-      const meses: MesDeuda[] = monthRange(corredor.fecha_ingreso).map(({ year, month }) => {
-        const esFuturo =
-          year > hoy.getFullYear() ||
-          (year === hoy.getFullYear() && month > hoy.getMonth());
-        const pagado = pagadosSet.has(`${year}-${month}`);
-        return {
-          year,
-          month,
-          estado: esFuturo ? "futuro" : pagado ? "pagado" : "deuda",
-          monto: precio,
-        };
-      });
+      const pausasSet = new Set(
+        pausas
+          .filter(p => p.corredor_id === corredor.id)
+          .map(p => `${p.año}-${p.mes - 1}`)
+      );
+
+      const fechaFin = corredor.estado === "inactivo" && corredor.fecha_salida
+        ? corredor.fecha_salida
+        : undefined;
+
+      const meses: MesDeuda[] = monthRange(corredor.fecha_ingreso, fechaFin).map(
+        ({ year, month }) => {
+          const esFuturo =
+            year > hoy.getFullYear() ||
+            (year === hoy.getFullYear() && month > hoy.getMonth());
+          const pagado = pagadosSet.has(`${year}-${month}`);
+          const pausado = pausasSet.has(`${year}-${month}`);
+          return {
+            year,
+            month,
+            estado: esFuturo
+              ? "futuro"
+              : pausado
+              ? "pausa"
+              : pagado
+              ? "pagado"
+              : "deuda",
+            monto: precio,
+          };
+        }
+      );
 
       const deudas = meses.filter(m => m.estado === "deuda");
       return {

@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         },
         application_context: {
-          brand_name: "RunTeam Pro",
+          brand_name: "Wave One",
           user_action: "SUBSCRIBE_NOW",
           return_url: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/corredores/${corredor_id}`,
           cancel_url: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/corredores/${corredor_id}`,

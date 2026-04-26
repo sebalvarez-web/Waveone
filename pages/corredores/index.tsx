@@ -1,19 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { Layout } from "@/components/layout/Layout";
 import { TablaCorredores } from "@/components/corredores/TablaCorredores";
 import { FormCorredor } from "@/components/corredores/FormCorredor";
 import { useCorredores } from "@/hooks/useCorredores";
 import { usePlanes } from "@/hooks/usePlanes";
 import { toast } from "@/components/ui/Toast";
-import type { Corredor } from "@/types/database";
+import type { Corredor, CorredorEstado } from "@/types/database";
 
 export default function CorredoresPage() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingCorredor, setEditingCorredor] = useState<Corredor | undefined>();
-  const { corredores, loading, refetch, deleteCorredor } = useCorredores({ search });
+  const supabase = useSupabaseClient();
+  const [filtroEstado, setFiltroEstado] = useState<CorredorEstado | "">("");
+  const [filtroEntrenador, setFiltroEntrenador] = useState("");
+  const [filtroPlan, setFiltroPlan] = useState("");
+  const [entrenadores, setEntrenadores] = useState<{ id: string; nombre: string }[]>([]);
+  const { corredores, loading, refetch, deleteCorredor } = useCorredores({
+    search,
+    estado: filtroEstado,
+    entrenadorId: filtroEntrenador,
+    planId: filtroPlan,
+  });
   const { planes } = usePlanes();
+
+  useEffect(() => {
+    supabase
+      .from("users")
+      .select("id, nombre")
+      .eq("rol", "entrenador")
+      .then(({ data }) => setEntrenadores(data ?? []));
+  }, [supabase]);
 
   const handleDelete = async (id: string) => {
     const err = await deleteCorredor(id);
@@ -36,7 +55,7 @@ export default function CorredoresPage() {
 
   return (
     <>
-      <Head><title>RunTeam Pro — Corredores</title></Head>
+      <Head><title>Wave One — Corredores</title></Head>
       <Layout onSearch={setSearch}>
         <div className="space-y-8">
           <div className="flex justify-between items-end">
@@ -61,6 +80,51 @@ export default function CorredoresPage() {
                 Añadir Corredor
               </button>
             </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <select
+              value={filtroEstado}
+              onChange={(e) => setFiltroEstado(e.target.value as CorredorEstado | "")}
+              className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
+            >
+              <option value="">Todos los estados</option>
+              <option value="activo">Activo</option>
+              <option value="pausado">Pausado</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+
+            <select
+              value={filtroEntrenador}
+              onChange={(e) => setFiltroEntrenador(e.target.value)}
+              className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
+            >
+              <option value="">Todos los entrenadores</option>
+              {entrenadores.map((e) => (
+                <option key={e.id} value={e.id}>{e.nombre}</option>
+              ))}
+            </select>
+
+            <select
+              value={filtroPlan}
+              onChange={(e) => setFiltroPlan(e.target.value)}
+              className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
+            >
+              <option value="">Todos los planes</option>
+              {planes.map((p) => (
+                <option key={p.id} value={p.id}>{p.nombre}</option>
+              ))}
+            </select>
+
+            {(filtroEstado || filtroEntrenador || filtroPlan) && (
+              <button
+                onClick={() => { setFiltroEstado(""); setFiltroEntrenador(""); setFiltroPlan(""); }}
+                className="text-sm text-outline hover:text-error flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+                Limpiar filtros
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
