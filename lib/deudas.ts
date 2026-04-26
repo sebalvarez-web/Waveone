@@ -55,8 +55,8 @@ export function calcularDeudas(
 
       const pagadosSet = new Set(
         ingresos.map(t => {
-          const d = new Date(t.fecha);
-          return `${d.getFullYear()}-${d.getMonth()}`;
+          const [y, m] = t.fecha.split("T")[0].split("-").map(Number);
+          return `${y}-${m - 1}`;
         })
       );
 

@@ -40,7 +40,7 @@ const COLS = lastMonths(12);
 export default function DeudasPage() {
   const [search, setSearch] = useState("");
   const { corredores, loading: loadingC } = useCorredores();
-  const { transacciones, loading: loadingT } = useTransacciones({ limit: 1000 });
+  const { transacciones, loading: loadingT } = useTransacciones({ soloIngresoPagado: true });
   const [soloConDeuda, setSoloConDeuda] = useState(false);
 
   const deudas = useMemo(() => calcularDeudas(corredores, transacciones), [corredores, transacciones]);

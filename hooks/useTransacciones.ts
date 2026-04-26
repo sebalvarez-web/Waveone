@@ -5,9 +5,10 @@ import type { Transaccion } from "@/types/database";
 interface UseTransaccionesOptions {
   limit?: number;
   corredorId?: string;
+  soloIngresoPagado?: boolean;
 }
 
-export function useTransacciones({ limit = 50, corredorId }: UseTransaccionesOptions = {}) {
+export function useTransacciones({ limit = 50, corredorId, soloIngresoPagado = false }: UseTransaccionesOptions = {}) {
   const supabase = useSupabaseClient();
   const [transacciones, setTransacciones] = useState<Transaccion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,11 +19,18 @@ export function useTransacciones({ limit = 50, corredorId }: UseTransaccionesOpt
     let query = supabase
       .from("transacciones")
       .select(`*, corredor:corredores(id, nombre)`)
-      .order("fecha", { ascending: false })
-      .limit(limit);
+      .order("fecha", { ascending: false });
+
+    if (!soloIngresoPagado) {
+      query = query.limit(limit);
+    }
 
     if (corredorId) {
       query = query.eq("corredor_id", corredorId);
+    }
+
+    if (soloIngresoPagado) {
+      query = query.eq("tipo", "ingreso").eq("estado", "pagado");
     }
 
     const { data, error: err } = await query;
@@ -33,7 +41,7 @@ export function useTransacciones({ limit = 50, corredorId }: UseTransaccionesOpt
       setTransacciones(data ?? []);
     }
     setLoading(false);
-  }, [supabase, limit, corredorId]);
+  }, [supabase, limit, corredorId, soloIngresoPagado]);
 
   useEffect(() => {
     fetchTransacciones();
