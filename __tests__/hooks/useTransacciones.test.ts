@@ -2,7 +2,15 @@ import { renderHook, act } from "@testing-library/react";
 import { useTransacciones } from "@/hooks/useTransacciones";
 
 const mockFrom = jest.fn();
-const mockSupabase = { from: mockFrom };
+const mockChannel = {
+  on: jest.fn().mockReturnThis(),
+  subscribe: jest.fn().mockReturnThis(),
+};
+const mockSupabase = {
+  from: mockFrom,
+  channel: jest.fn().mockReturnValue(mockChannel),
+  removeChannel: jest.fn(),
+};
 
 jest.mock("@supabase/auth-helpers-react", () => ({
   useSupabaseClient: () => mockSupabase,
