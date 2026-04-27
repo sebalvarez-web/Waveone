@@ -9,6 +9,8 @@ import { usePlanes } from "@/hooks/usePlanes";
 import { toast } from "@/components/ui/Toast";
 import type { Corredor, CorredorEstado } from "@/types/database";
 
+type SortKey = "nombre_az" | "nombre_za" | "ingreso_desc" | "ingreso_asc" | "estado" | "plan";
+
 export default function CorredoresPage() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -17,6 +19,7 @@ export default function CorredoresPage() {
   const [filtroEstado, setFiltroEstado] = useState<CorredorEstado | "">("");
   const [filtroEntrenador, setFiltroEntrenador] = useState("");
   const [filtroPlan, setFiltroPlan] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("nombre_az");
   const [entrenadores, setEntrenadores] = useState<{ id: string; nombre: string }[]>([]);
   const { corredores, loading, refetch, deleteCorredor } = useCorredores({
     search,
@@ -25,6 +28,19 @@ export default function CorredoresPage() {
     planId: filtroPlan,
   });
   const { planes } = usePlanes();
+
+  const corredoresSorted = (() => {
+    const arr = [...corredores];
+    switch (sortKey) {
+      case "nombre_az":    arr.sort((a, b) => a.nombre.localeCompare(b.nombre)); break;
+      case "nombre_za":    arr.sort((a, b) => b.nombre.localeCompare(a.nombre)); break;
+      case "ingreso_desc": arr.sort((a, b) => (a.fecha_ingreso < b.fecha_ingreso ? 1 : -1)); break;
+      case "ingreso_asc":  arr.sort((a, b) => (a.fecha_ingreso < b.fecha_ingreso ? -1 : 1)); break;
+      case "estado":       arr.sort((a, b) => a.estado.localeCompare(b.estado) || a.nombre.localeCompare(b.nombre)); break;
+      case "plan":         arr.sort((a, b) => (a.plan?.nombre ?? "~").localeCompare(b.plan?.nombre ?? "~") || a.nombre.localeCompare(b.nombre)); break;
+    }
+    return arr;
+  })();
 
   useEffect(() => {
     supabase
@@ -126,6 +142,20 @@ export default function CorredoresPage() {
                 ...planes.map((p) => ({ value: p.id, label: p.nombre })),
               ]}
             />
+            <div className={hasFilters ? "" : "ml-auto"}>
+              <select
+                value={sortKey}
+                onChange={(e) => setSortKey(e.target.value as SortKey)}
+                className="border border-outline-variant rounded-lg px-3 py-1.5 text-xs font-semibold text-on-surface-variant focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 bg-white cursor-pointer"
+              >
+                <option value="nombre_az">Nombre A–Z</option>
+                <option value="nombre_za">Nombre Z–A</option>
+                <option value="ingreso_desc">Ingreso (reciente)</option>
+                <option value="ingreso_asc">Ingreso (antiguo)</option>
+                <option value="estado">Estado</option>
+                <option value="plan">Plan</option>
+              </select>
+            </div>
             {hasFilters && (
               <button
                 onClick={() => { setFiltroEstado(""); setFiltroEntrenador(""); setFiltroPlan(""); }}
@@ -138,7 +168,7 @@ export default function CorredoresPage() {
           </div>
 
           <TablaCorredores
-            corredores={corredores}
+            corredores={corredoresSorted}
             loading={loading}
             onEdit={handleEdit}
             onDelete={handleDelete}
