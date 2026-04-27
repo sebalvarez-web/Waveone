@@ -81,16 +81,23 @@ export function calcularDeudas(
 
       // DEBUG temporal — borrar después
       if (typeof window !== "undefined" && corredor.id === "4f30c331-ef4a-4679-95db-d011c88e190a") {
+        const sample = transacciones.slice(0, 3).map(t => ({ id: t.id, corredor_id: t.corredor_id, tipo: t.tipo, estado: t.estado, fecha: t.fecha }));
+        const corredorIdsUnicos = new Set(transacciones.map(t => t.corredor_id));
         // eslint-disable-next-line no-console
         console.log("[DEUDAS DEBUG Alejandra]", {
           fecha_ingreso: corredor.fecha_ingreso,
           plan_precio: precio,
+          TOTAL_transacciones_arr: transacciones.length,
+          TOTAL_pagosAplicados_arr: pagosAplicados.length,
+          corredorIdsUnicos_count: corredorIdsUnicos.size,
+          alejandra_aparece_en_lista: corredorIdsUnicos.has(corredor.id),
           tx_count: transacciones.filter(t => t.corredor_id === corredor.id).length,
           tx_pagado_count: transacciones.filter(t => t.corredor_id === corredor.id && t.tipo === "ingreso" && t.estado === "pagado").length,
           pagosAplicados_count: pagosAplicados.filter(pa => pa.corredor_id === corredor.id).length,
           aplicadosKeys: Array.from(aplicadosSet).sort(),
           legacyKeys: Array.from(new Set(legacyPagados)).sort(),
           pagadosFinal: Array.from(pagadosSet).sort(),
+          sample_first3_tx: sample,
         });
       }
 
