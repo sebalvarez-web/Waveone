@@ -24,17 +24,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Método no permitido" });
   }
 
-  const signature = req.headers["stripe-signature"] as string;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error(
+      "STRIPE_WEBHOOK_SECRET no está configurado. Los webhooks no se pueden verificar."
+    );
+    return res.status(500).json({ error: "Webhook no configurado" });
+  }
+
+  const signature = req.headers["stripe-signature"] as string | undefined;
+  if (!signature) {
+    console.error("Webhook Stripe recibido sin header stripe-signature");
+    return res.status(400).json({ error: "Firma faltante" });
+  }
+
   const rawBody = await getRawBody(req);
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      rawBody,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET ?? "whsec_test"
+    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+  } catch (err) {
+    console.error(
+      "Verificación de firma Stripe falló:",
+      err instanceof Error ? err.message : err
     );
-  } catch {
     return res.status(400).json({ error: "Firma inválida" });
   }
 
@@ -62,7 +75,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
   } catch (err) {
-    console.error("Error procesando webhook Stripe:", err);
+    console.error(
+      `Error procesando webhook Stripe ${event.type} (id=${event.id}):`,
+      err instanceof Error ? err.message : err
+    );
     return res.status(500).json({ error: "Error interno" });
   }
 

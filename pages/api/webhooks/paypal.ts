@@ -18,8 +18,17 @@ const PAYPAL_MX_FEE_TAX_RATE = 0.16; // IVA México sobre comisión PayPal
 
 async function verifyPayPalWebhook(
   req: NextApiRequest,
-  body: PayPalWebhookBody
+  body: PayPalWebhookBody,
+  webhookId: string
 ): Promise<boolean> {
+  const transmissionId = req.headers["paypal-transmission-id"];
+  if (!transmissionId) {
+    console.error(
+      "Webhook PayPal recibido sin headers de transmisión (paypal-transmission-id)"
+    );
+    return false;
+  }
+
   try {
     const response = await paypalFetch(
       "/v1/notifications/verify-webhook-signature",
@@ -28,19 +37,36 @@ async function verifyPayPalWebhook(
         body: JSON.stringify({
           auth_algo: req.headers["paypal-auth-algo"],
           cert_url: req.headers["paypal-cert-url"],
-          transmission_id: req.headers["paypal-transmission-id"],
+          transmission_id: transmissionId,
           transmission_sig: req.headers["paypal-transmission-sig"],
           transmission_time: req.headers["paypal-transmission-time"],
-          webhook_id: process.env.PAYPAL_WEBHOOK_ID,
+          webhook_id: webhookId,
           webhook_event: body,
         }),
       }
     );
 
-    if (!response.ok) return false;
-    const result = await response.json();
-    return result.verification_status === "SUCCESS";
-  } catch {
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      console.error(
+        `Verificación PayPal falló: HTTP ${response.status}`,
+        text.slice(0, 500)
+      );
+      return false;
+    }
+    const result = (await response.json()) as { verification_status?: string };
+    if (result.verification_status !== "SUCCESS") {
+      console.error(
+        `Verificación PayPal devolvió ${result.verification_status} para transmission ${String(transmissionId)}`
+      );
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error(
+      "Error verificando firma PayPal:",
+      err instanceof Error ? err.message : err
+    );
     return false;
   }
 }
@@ -50,8 +76,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Método no permitido" });
   }
 
+  const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+  if (!webhookId) {
+    console.error(
+      "PAYPAL_WEBHOOK_ID no está configurado. Los webhooks no se pueden verificar."
+    );
+    return res.status(500).json({ error: "Webhook no configurado" });
+  }
+
   const body = req.body as PayPalWebhookBody;
-  const isValid = await verifyPayPalWebhook(req, body);
+  if (!body || typeof body !== "object" || !body.event_type) {
+    console.error("Webhook PayPal con cuerpo inválido o vacío");
+    return res.status(400).json({ error: "Cuerpo inválido" });
+  }
+
+  const isValid = await verifyPayPalWebhook(req, body, webhookId);
 
   if (!isValid) {
     return res.status(400).json({ error: "Firma inválida" });
@@ -170,7 +209,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .eq("paypal_order_id", saleId);
     }
   } catch (err) {
-    console.error("Error procesando webhook PayPal:", err);
+    console.error(
+      `Error procesando webhook PayPal ${body.event_type} (id=${body.id ?? "?"}):`,
+      err instanceof Error ? err.message : err
+    );
     return res.status(500).json({ error: "Error interno" });
   }
 

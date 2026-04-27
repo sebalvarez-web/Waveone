@@ -20,8 +20,14 @@ const mockStripe = stripe as jest.Mocked<typeof stripe>;
 const mockCreateServerClient = createServerClient as jest.Mock;
 
 function makeMockSupabase(corredor: { id: string } | null) {
-  const mockUpsert = jest.fn().mockResolvedValue({ error: null });
+  const mockUpsert = jest.fn();
+  const upsertChain = {
+    select: jest.fn().mockReturnThis(),
+    single: jest.fn().mockResolvedValue({ data: { id: "tx-1" }, error: null }),
+  };
+  mockUpsert.mockReturnValue(upsertChain);
   const mockInsert = jest.fn().mockResolvedValue({ error: null });
+  const mockRpc = jest.fn().mockResolvedValue({ error: null });
   return {
     from: jest.fn().mockImplementation((table: string) => {
       if (table === "corredores") {
@@ -35,13 +41,37 @@ function makeMockSupabase(corredor: { id: string } | null) {
       if (table === "pagos_sin_asignar") return { insert: mockInsert };
       return {};
     }),
+    rpc: mockRpc,
     _mockUpsert: mockUpsert,
     _mockInsert: mockInsert,
   };
 }
 
 describe("POST /api/webhooks/stripe", () => {
-  beforeEach(() => jest.clearAllMocks());
+  const ORIGINAL_ENV = process.env;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env = { ...ORIGINAL_ENV, STRIPE_WEBHOOK_SECRET: "whsec_test_secret" };
+  });
+
+  afterAll(() => {
+    process.env = ORIGINAL_ENV;
+  });
+
+  it("devuelve 500 si STRIPE_WEBHOOK_SECRET no está configurado", async () => {
+    delete process.env.STRIPE_WEBHOOK_SECRET;
+    const { req, res } = createMocks({ method: "POST" });
+    req.headers["stripe-signature"] = "any";
+    await handler(req, res);
+    expect(res._getStatusCode()).toBe(500);
+  });
+
+  it("devuelve 400 si falta el header stripe-signature", async () => {
+    const { req, res } = createMocks({ method: "POST" });
+    await handler(req, res);
+    expect(res._getStatusCode()).toBe(400);
+  });
 
   it("devuelve 400 si la firma es inválida", async () => {
     (mockStripe.webhooks.constructEvent as jest.Mock).mockImplementation(() => {

@@ -16,8 +16,14 @@ const mockPaypalFetch = paypalFetch as jest.Mock;
 const mockCreateServerClient = createServerClient as jest.Mock;
 
 function makeMockSupabase(corredor: { id: string } | null) {
-  const mockUpsert = jest.fn().mockResolvedValue({ error: null });
+  const mockUpsert = jest.fn();
+  const upsertChain = {
+    select: jest.fn().mockReturnThis(),
+    single: jest.fn().mockResolvedValue({ data: { id: "tx-1" }, error: null }),
+  };
+  mockUpsert.mockReturnValue(upsertChain);
   const mockInsert = jest.fn().mockResolvedValue({ error: null });
+  const mockRpc = jest.fn().mockResolvedValue({ error: null });
   return {
     from: jest.fn().mockImplementation((table: string) => {
       if (table === "corredores") {
@@ -31,21 +37,56 @@ function makeMockSupabase(corredor: { id: string } | null) {
       if (table === "pagos_sin_asignar") return { insert: mockInsert };
       return {};
     }),
+    rpc: mockRpc,
     _mockUpsert: mockUpsert,
     _mockInsert: mockInsert,
   };
 }
 
 describe("POST /api/webhooks/paypal", () => {
-  beforeEach(() => jest.clearAllMocks());
+  const ORIGINAL_ENV = process.env;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env = { ...ORIGINAL_ENV, PAYPAL_WEBHOOK_ID: "WH-TEST-ID" };
+  });
+
+  afterAll(() => {
+    process.env = ORIGINAL_ENV;
+  });
+
+  it("devuelve 500 si PAYPAL_WEBHOOK_ID no está configurado", async () => {
+    delete process.env.PAYPAL_WEBHOOK_ID;
+    const { req, res } = createMocks({
+      method: "POST",
+      body: { event_type: "PAYMENT.SALE.COMPLETED" },
+    });
+    req.headers["paypal-transmission-id"] = "TX-1";
+    await handler(req, res);
+    expect(res._getStatusCode()).toBe(500);
+  });
+
+  it("devuelve 400 si falta el header paypal-transmission-id", async () => {
+    const { req, res } = createMocks({
+      method: "POST",
+      body: { event_type: "PAYMENT.SALE.COMPLETED" },
+    });
+    await handler(req, res);
+    expect(res._getStatusCode()).toBe(400);
+  });
 
   it("devuelve 400 si la verificación falla", async () => {
-    mockPaypalFetch.mockResolvedValue({ ok: false });
+    mockPaypalFetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: jest.fn().mockResolvedValue("unauthorized"),
+    });
 
     const { req, res } = createMocks({
       method: "POST",
       body: { event_type: "PAYMENT.SALE.COMPLETED" },
     });
+    req.headers["paypal-transmission-id"] = "TX-1";
     await handler(req, res);
     expect(res._getStatusCode()).toBe(400);
   });
@@ -71,6 +112,7 @@ describe("POST /api/webhooks/paypal", () => {
         },
       },
     });
+    req.headers["paypal-transmission-id"] = "TX-1";
 
     await handler(req, res);
     expect(res._getStatusCode()).toBe(200);
@@ -108,6 +150,7 @@ describe("POST /api/webhooks/paypal", () => {
         },
       },
     });
+    req.headers["paypal-transmission-id"] = "TX-2";
 
     await handler(req, res);
     expect(res._getStatusCode()).toBe(200);
@@ -148,6 +191,7 @@ describe("POST /api/webhooks/paypal", () => {
         },
       },
     });
+    req.headers["paypal-transmission-id"] = "TX-3";
 
     await handler(req, res);
     expect(res._getStatusCode()).toBe(200);
