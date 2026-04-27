@@ -7,21 +7,6 @@ import { useCorredores } from "@/hooks/useCorredores";
 import type { Transaccion } from "@/types/database";
 
 type Tab = "todos" | "stripe" | "paypal" | "manual" | "sin_asignar";
-type SortKey = "fecha_desc" | "fecha_asc" | "monto_desc" | "monto_asc" | "corredor_az";
-
-function sortPagos(rows: Transaccion[], key: SortKey): Transaccion[] {
-  const arr = [...rows];
-  switch (key) {
-    case "fecha_desc": arr.sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0)); break;
-    case "fecha_asc":  arr.sort((a, b) => (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0)); break;
-    case "monto_desc": arr.sort((a, b) => Number(b.monto) - Number(a.monto)); break;
-    case "monto_asc":  arr.sort((a, b) => Number(a.monto) - Number(b.monto)); break;
-    case "corredor_az":
-      arr.sort((a, b) => (a.corredor?.nombre ?? "~").localeCompare(b.corredor?.nombre ?? "~"));
-      break;
-  }
-  return arr;
-}
 
 const FUENTE_BADGE: Record<string, { label: string; bg: string; text: string }> = {
   stripe:        { label: "Stripe",        bg: "bg-[#635bff]/10",   text: "text-[#635bff]" },
@@ -117,7 +102,6 @@ export default function PagosPage() {
   const { transacciones, loading, refetch } = useTransacciones({ limit: 500 });
   const { corredores } = useCorredores();
   const [tab, setTab] = useState<Tab>("todos");
-  const [sortKey, setSortKey] = useState<SortKey>("fecha_desc");
 
   const ingresos = transacciones.filter(t => t.tipo === "ingreso");
 
@@ -203,27 +187,7 @@ export default function PagosPage() {
               <PagosSinAsignar corredores={corredores} onReconciliado={refetch} />
             </div>
           ) : (
-            <>
-              <div className="px-4 py-2.5 border-b border-outline-variant/40 bg-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-on-surface-variant text-[18px]">sort</span>
-                <span className="text-[11px] font-bold tracking-wider text-on-surface-variant">ORDENAR</span>
-                <select
-                  value={sortKey}
-                  onChange={e => setSortKey(e.target.value as SortKey)}
-                  className="border border-outline-variant rounded-lg px-3 py-1.5 text-xs font-semibold text-on-surface-variant focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 bg-white cursor-pointer"
-                >
-                  <option value="fecha_desc">Fecha (más reciente)</option>
-                  <option value="fecha_asc">Fecha (más antigua)</option>
-                  <option value="monto_desc">Monto (mayor)</option>
-                  <option value="monto_asc">Monto (menor)</option>
-                  <option value="corredor_az">Corredor A–Z</option>
-                </select>
-                <span className="ml-auto text-[11px] text-on-surface-variant">
-                  {filtered[tab].length} resultados
-                </span>
-              </div>
-              <TablaPagos rows={sortPagos(filtered[tab], sortKey)} loading={loading} />
-            </>
+            <TablaPagos rows={filtered[tab]} loading={loading} />
           )}
         </div>
       </Layout>
