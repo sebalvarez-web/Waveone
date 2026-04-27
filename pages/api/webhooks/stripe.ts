@@ -69,10 +69,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   return res.status(200).json({ received: true });
 }
 
+async function fetchStripeFees(invoice: Stripe.Invoice): Promise<{ fee: number; tax: number }> {
+  const chargeId = (invoice as unknown as { charge?: string }).charge
+    ?? (invoice as unknown as { latest_charge?: string }).latest_charge;
+  if (!chargeId) return { fee: 0, tax: 0 };
+  try {
+    const charge = await stripe.charges.retrieve(chargeId as string, {
+      expand: ["balance_transaction"],
+    });
+    const bt = charge.balance_transaction as Stripe.BalanceTransaction | null;
+    if (!bt) return { fee: 0, tax: 0 };
+    const fee = (bt.fee ?? 0) / 100;
+    const taxAmount = (bt.fee_details ?? [])
+      .filter((f) => f.type === "tax")
+      .reduce((s, f) => s + (f.amount ?? 0), 0);
+    const feeWithoutTax = fee - taxAmount / 100;
+    return { fee: feeWithoutTax, tax: taxAmount / 100 };
+  } catch (e) {
+    console.error("Stripe fee lookup failed:", e);
+    return { fee: 0, tax: 0 };
+  }
+}
+
 async function handlePaymentSucceeded(
   supabase: ReturnType<typeof createServerClient>,
   invoice: Stripe.Invoice
 ) {
+  const monto = (invoice.amount_paid ?? 0) / 100;
+  const { fee, tax } = await fetchStripeFees(invoice);
+
   const { data: corredor } = await supabase
     .from("corredores")
     .select("id")
@@ -80,26 +105,43 @@ async function handlePaymentSucceeded(
     .single();
 
   if (corredor) {
-    const { error: upsertErr } = await supabase.from("transacciones").upsert(
-      {
-        tipo: "ingreso",
-        descripcion: `Pago Stripe — factura ${invoice.id}`,
-        monto: (invoice.amount_paid ?? 0) / 100,
-        fecha: new Date().toISOString().split("T")[0],
-        categoria: "membresia",
-        metodo: "stripe",
-        estado: "pagado",
-        corredor_id: corredor.id,
-        stripe_payment_id: invoice.id,
-      },
-      { onConflict: "stripe_payment_id" }
-    );
+    const { data: txRow, error: upsertErr } = await supabase
+      .from("transacciones")
+      .upsert(
+        {
+          tipo: "ingreso",
+          descripcion: `Pago Stripe — factura ${invoice.id}`,
+          monto,
+          comision: fee,
+          comision_impuesto: tax,
+          fecha: new Date().toISOString().split("T")[0],
+          categoria: "membresia",
+          metodo: "stripe",
+          estado: "pagado",
+          corredor_id: corredor.id,
+          stripe_payment_id: invoice.id,
+        },
+        { onConflict: "stripe_payment_id" }
+      )
+      .select("id")
+      .single();
     if (upsertErr) throw new Error(`DB error: ${upsertErr.message}`);
+
+    if (txRow?.id) {
+      const { error: rpcErr } = await supabase.rpc("aplicar_pago", {
+        p_transaccion_id: txRow.id,
+        p_corredor_id: corredor.id,
+        p_monto: monto,
+        p_mes_override: null,
+        p_anio_override: null,
+      });
+      if (rpcErr) console.error("aplicar_pago Stripe error:", rpcErr.message);
+    }
   } else {
     const { error: insertErr } = await supabase.from("pagos_sin_asignar").insert({
       fuente: "stripe",
       payload: invoice as unknown as Record<string, unknown>,
-      monto: (invoice.amount_paid ?? 0) / 100,
+      monto,
       fecha: new Date().toISOString().split("T")[0],
     });
     if (insertErr) throw new Error(`DB error: ${insertErr.message}`);

@@ -8,6 +8,8 @@ import { FormCorredor } from "@/components/corredores/FormCorredor";
 import { ModalNotaHistorial } from "@/components/corredores/ModalNotaHistorial";
 import { usePlanes } from "@/hooks/usePlanes";
 import { useTransacciones } from "@/hooks/useTransacciones";
+import { usePagosAplicados } from "@/hooks/usePagosAplicados";
+import { usePausas } from "@/hooks/usePausas";
 import { useHistorialCorredor } from "@/hooks/useHistorialCorredor";
 import { toast } from "@/components/ui/Toast";
 import { calcularDeudas, MESES_ES } from "@/lib/deudas";
@@ -61,6 +63,8 @@ export default function CorredorPerfilPage() {
   const supabase = useSupabaseClient();
   const { planes } = usePlanes();
   const { transacciones } = useTransacciones({ corredorId: id });
+  const { pagosAplicados } = usePagosAplicados(id);
+  const { pausas } = usePausas(id);
   const { historial, loading: loadingHistorial, refetch: refetchHistorial } = useHistorialCorredor(id);
 
   const [corredor, setCorredor] = useState<Corredor | null>(null);
@@ -98,9 +102,9 @@ export default function CorredorPerfilPage() {
 
   const deudaData = useMemo(() => {
     if (!corredor) return null;
-    const result = calcularDeudas([corredor], transacciones);
+    const result = calcularDeudas([corredor], transacciones, pausas, pagosAplicados);
     return result[0] ?? null;
-  }, [corredor, transacciones]);
+  }, [corredor, transacciones, pausas, pagosAplicados]);
 
   const saldo = transacciones.reduce((acc, t) => {
     return t.tipo === "ingreso" ? acc + Number(t.monto) : acc - Number(t.monto);

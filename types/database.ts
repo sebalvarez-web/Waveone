@@ -55,6 +55,9 @@ export interface Transaccion {
   tipo: TransaccionTipo;
   descripcion: string;
   monto: number;
+  comision: number;
+  comision_impuesto: number;
+  monto_neto: number;
   fecha: string;
   categoria: string;
   metodo: TransaccionMetodo;
@@ -65,6 +68,18 @@ export interface Transaccion {
   created_at: string;
   // joins opcionales
   corredor?: Pick<Corredor, "id" | "nombre">;
+  pagos_aplicados?: PagoAplicado[];
+}
+
+export interface PagoAplicado {
+  id: string;
+  transaccion_id: string;
+  corredor_id: string;
+  año: number;
+  mes: number;
+  monto: number;
+  aplicado_automatico: boolean;
+  created_at: string;
 }
 
 export interface PagoSinAsignar {

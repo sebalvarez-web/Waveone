@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useCorredores } from "@/hooks/useCorredores";
 import { useTransacciones } from "@/hooks/useTransacciones";
+import { usePagosAplicados } from "@/hooks/usePagosAplicados";
+import { usePausasAll } from "@/hooks/usePausasAll";
 import { calcularDeudas, MESES_ES, type MesEstado } from "@/lib/deudas";
 
 type SortKey = "deuda_desc" | "deuda_asc" | "nombre" | "monto_desc";
@@ -49,10 +51,15 @@ export default function DeudasPage() {
   const [search, setSearch] = useState("");
   const { corredores, loading: loadingC } = useCorredores();
   const { transacciones, loading: loadingT } = useTransacciones({ soloIngresoPagado: true });
+  const { pagosAplicados } = usePagosAplicados();
+  const { pausas } = usePausasAll();
   const [soloConDeuda, setSoloConDeuda] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("deuda_desc");
 
-  const deudas = useMemo(() => calcularDeudas(corredores, transacciones), [corredores, transacciones]);
+  const deudas = useMemo(
+    () => calcularDeudas(corredores, transacciones, pausas, pagosAplicados),
+    [corredores, transacciones, pausas, pagosAplicados]
+  );
 
   const filtradas = useMemo(() => {
     const list = deudas.filter(d => {

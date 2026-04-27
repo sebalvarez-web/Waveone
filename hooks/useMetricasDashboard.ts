@@ -9,6 +9,8 @@ interface MetricasDashboard {
   cantidadGastosPendientes: number;
   ingresosStripe: number;
   ingresosPaypal: number;
+  ingresoNeto: number;
+  comisionesMes: number;
 }
 
 export function useMetricasDashboard() {
@@ -21,6 +23,8 @@ export function useMetricasDashboard() {
     cantidadGastosPendientes: 0,
     ingresosStripe: 0,
     ingresosPaypal: 0,
+    ingresoNeto: 0,
+    comisionesMes: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +53,7 @@ export function useMetricasDashboard() {
           .eq("estado", "activo"),
         supabase
           .from("transacciones")
-          .select("monto, metodo")
+          .select("monto, metodo, comision, comision_impuesto, monto_neto")
           .eq("tipo", "ingreso")
           .eq("estado", "pagado")
           .gte("fecha", inicioMes),
@@ -82,6 +86,12 @@ export function useMetricasDashboard() {
       const ingresosPaypal = (ingresosMesData ?? [])
         .filter((t) => t.metodo === "paypal")
         .reduce((sum, t) => sum + Number(t.monto), 0);
+      const comisionesMes = (ingresosMesData ?? []).reduce(
+        (sum, t) => sum + Number(t.comision ?? 0) + Number(t.comision_impuesto ?? 0), 0
+      );
+      const ingresoNeto = (ingresosMesData ?? []).reduce(
+        (sum, t) => sum + Number(t.monto_neto ?? t.monto), 0
+      );
 
       setMetricas({
         totalCorredoresActivos: activos ?? 0,
@@ -91,6 +101,8 @@ export function useMetricasDashboard() {
         cantidadGastosPendientes: gastosPendientesData?.length ?? 0,
         ingresosStripe,
         ingresosPaypal,
+        ingresoNeto,
+        comisionesMes,
       });
       setLoading(false);
     }

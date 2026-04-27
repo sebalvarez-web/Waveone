@@ -18,6 +18,7 @@ export function FormPagoManual({ corredores, onSuccess }: FormPagoManualProps) {
     metodo: "transferencia",
     referencia: "",
     categoria: "membresia",
+    aplicar_a_mes: "", // formato "YYYY-M" (vacío = automático al adeudo más viejo)
   });
   const [loading, setLoading] = useState(false);
 
@@ -26,22 +27,41 @@ export function FormPagoManual({ corredores, onSuccess }: FormPagoManualProps) {
     if (!form.descripcion || !form.monto) return;
     setLoading(true);
 
-    const { error } = await supabase.from("transacciones").insert({
-      tipo: "ingreso",
-      descripcion: form.descripcion,
-      corredor_id: form.corredor_id || null,
-      monto: Number(form.monto),
-      fecha: form.fecha,
-      metodo: form.metodo,
-      categoria: form.categoria,
-      estado: "pagado",
-    });
+    const { data: tx, error } = await supabase
+      .from("transacciones")
+      .insert({
+        tipo: "ingreso",
+        descripcion: form.descripcion,
+        corredor_id: form.corredor_id || null,
+        monto: Number(form.monto),
+        fecha: form.fecha,
+        metodo: form.metodo,
+        categoria: form.categoria,
+        estado: "pagado",
+      })
+      .select("id")
+      .single();
+
+    if (error) { setLoading(false); toast.error("Error al registrar el pago"); return; }
+
+    // Aplicar a mes de adeudo más antiguo (o al mes específico seleccionado)
+    if (tx?.id && form.corredor_id) {
+      const override = form.aplicar_a_mes;
+      const [y, m] = override ? override.split("-").map(Number) : [null, null];
+      const { error: rpcErr } = await supabase.rpc("aplicar_pago", {
+        p_transaccion_id: tx.id,
+        p_corredor_id: form.corredor_id,
+        p_monto: Number(form.monto),
+        p_mes_override: m,
+        p_anio_override: y,
+      });
+      if (rpcErr) toast.error("Pago registrado pero no se aplicó a mes adeudado");
+    }
 
     setLoading(false);
-    if (error) { toast.error("Error al registrar el pago"); return; }
     toast.success("Pago registrado");
     onSuccess();
-    setForm({ ...form, descripcion: "", monto: "", corredor_id: "", referencia: "" });
+    setForm({ ...form, descripcion: "", monto: "", corredor_id: "", referencia: "", aplicar_a_mes: "" });
   };
 
   return (
@@ -109,6 +129,22 @@ export function FormPagoManual({ corredores, onSuccess }: FormPagoManualProps) {
             <option value="efectivo">Efectivo</option>
           </select>
         </div>
+      </div>
+      <div className="space-y-1">
+        <label className="font-label-caps text-on-surface-variant block text-xs">
+          APLICAR A MES (opcional — vacío = adeudo más antiguo)
+        </label>
+        <input
+          type="month"
+          value={form.aplicar_a_mes ? form.aplicar_a_mes.replace(/-(\d)$/, "-0$1") : ""}
+          onChange={(e) => {
+            const v = e.target.value; // "YYYY-MM"
+            if (!v) { setForm((p) => ({ ...p, aplicar_a_mes: "" })); return; }
+            const [y, m] = v.split("-").map(Number);
+            setForm((p) => ({ ...p, aplicar_a_mes: `${y}-${m}` }));
+          }}
+          className="w-full rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary text-sm py-2.5 px-3"
+        />
       </div>
       <button
         type="submit"

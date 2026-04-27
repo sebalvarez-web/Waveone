@@ -1,4 +1,4 @@
-import type { Corredor, Transaccion, Pausa } from "@/types/database";
+import type { Corredor, Transaccion, Pausa, PagoAplicado } from "@/types/database";
 
 export type MesEstado = "pagado" | "deuda" | "pausa" | "futuro";
 
@@ -45,26 +45,38 @@ function monthRange(
 export function calcularDeudas(
   corredores: Corredor[],
   transacciones: Transaccion[],
-  pausas: Pausa[] = []
+  pausas: Pausa[] = [],
+  pagosAplicados: PagoAplicado[] = []
 ): DeudaCorredor[] {
   const hoy = new Date();
 
   return corredores
     .map(corredor => {
       const precio = corredor.plan?.precio_mensual ?? 0;
-      const ingresos = transacciones.filter(
-        t =>
-          t.corredor_id === corredor.id &&
-          t.tipo === "ingreso" &&
-          t.estado === "pagado"
-      );
 
-      const pagadosSet = new Set(
-        ingresos.map(t => {
+      // Fuente de verdad: pagos_aplicados (mes/año en que se aplica el pago,
+      // independiente de la fecha en que se cobró). Fallback a t.fecha sólo
+      // para transacciones legacy que aún no tienen filas en pagos_aplicados.
+      const aplicadosSet = new Set(
+        pagosAplicados
+          .filter(pa => pa.corredor_id === corredor.id)
+          .map(pa => `${pa.año}-${pa.mes - 1}`)
+      );
+      const txConAplicacion = new Set(pagosAplicados.map(pa => pa.transaccion_id));
+      const legacyPagados = transacciones
+        .filter(
+          t =>
+            t.corredor_id === corredor.id &&
+            t.tipo === "ingreso" &&
+            t.estado === "pagado" &&
+            !txConAplicacion.has(t.id)
+        )
+        .map(t => {
           const [y, m] = t.fecha.split("T")[0].split("-").map(Number);
           return `${y}-${m - 1}`;
-        })
-      );
+        });
+      const pagadosSet = new Set<string>(legacyPagados);
+      aplicadosSet.forEach((k) => pagadosSet.add(k));
 
       const pausasSet = new Set(
         pausas
