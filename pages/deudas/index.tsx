@@ -214,10 +214,10 @@ export default function DeudasPage() {
               ))}
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[60vh]">
               <table className="w-full text-sm" style={{ fontVariantNumeric: "tabular-nums" }}>
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/50">
+                <thead className="sticky top-0 z-20">
+                  <tr className="border-b border-slate-200 bg-slate-50">
                     <th className="px-4 py-3 text-left text-[11px] tracking-wider text-on-surface-variant font-semibold uppercase sticky left-0 bg-slate-50/95 backdrop-blur z-10 min-w-[220px]">
                       Corredor
                     </th>
