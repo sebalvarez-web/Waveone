@@ -57,12 +57,13 @@ export function calcularDeudas(
       // Fuente de verdad: pagos_aplicados (mes/año en que se aplica el pago,
       // independiente de la fecha en que se cobró). Fallback a t.fecha sólo
       // para transacciones legacy que aún no tienen filas en pagos_aplicados.
+      const paDelCorredor = pagosAplicados.filter(pa => pa.corredor_id === corredor.id);
       const aplicadosSet = new Set(
-        pagosAplicados
-          .filter(pa => pa.corredor_id === corredor.id)
-          .map(pa => `${pa.año}-${pa.mes - 1}`)
+        paDelCorredor.map(pa => `${pa.año}-${pa.mes - 1}`)
       );
-      const txConAplicacion = new Set(pagosAplicados.map(pa => pa.transaccion_id));
+      // Sólo excluir del fallback legacy los tx que ya tienen pa asignada AL MISMO corredor.
+      // Si hay un pa huérfano/cross-corredor, no debe afectar el cálculo de este corredor.
+      const txConAplicacion = new Set(paDelCorredor.map(pa => pa.transaccion_id));
       const legacyPagados = transacciones
         .filter(
           t =>
