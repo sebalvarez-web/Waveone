@@ -18,33 +18,51 @@ export function useTransacciones({ limit = 50, corredorId, soloIngresoPagado = f
     setLoading(true);
 
     if (soloIngresoPagado) {
-      // Paginar en batches de 1000 para evitar el max-rows default de Supabase
+      // Optimización: contar primero, luego disparar todas las páginas en paralelo.
+      // Además seleccionamos sólo los campos que /deudas necesita (sin join a corredores)
+      // para reducir bytes y tiempo de respuesta.
       const PAGE = 1000;
-      const all: Transaccion[] = [];
-      let from = 0;
-      // Loop hasta que un batch venga incompleto (= ya no hay más filas)
-      // Cap de seguridad: 200 páginas (200k filas)
-      for (let i = 0; i < 200; i++) {
-        const { data, error: err } = await supabase
+      const SELECT = "id,corredor_id,tipo,estado,fecha,monto,descripcion,metodo,created_at";
+      const { count, error: countErr } = await supabase
+        .from("transacciones")
+        .select("id", { count: "exact", head: true })
+        .eq("tipo", "ingreso")
+        .eq("estado", "pagado");
+      if (countErr) {
+        // eslint-disable-next-line no-console
+        console.error("useTransacciones count error:", countErr);
+        setError(countErr);
+        setLoading(false);
+        return;
+      }
+      const total = count ?? 0;
+      if (total === 0) {
+        setTransacciones([]);
+        setLoading(false);
+        return;
+      }
+      const pages = Math.ceil(total / PAGE);
+      const reqs = Array.from({ length: pages }, (_, i) =>
+        supabase
           .from("transacciones")
-          .select(`*, corredor:corredores(id, nombre)`)
+          .select(SELECT)
           .eq("tipo", "ingreso")
           .eq("estado", "pagado")
           .order("fecha", { ascending: false })
           .order("id", { ascending: false })
-          .range(from, from + PAGE - 1);
+          .range(i * PAGE, i * PAGE + PAGE - 1)
+      );
+      const results = await Promise.all(reqs);
+      const all: Transaccion[] = [];
+      for (const { data, error: err } of results) {
         if (err) {
-          // No wipear data anterior; sólo loguear y mantener la última válida
           // eslint-disable-next-line no-console
           console.error("useTransacciones soloIngresoPagado error:", err);
           setError(err);
           setLoading(false);
           return;
         }
-        const batch = data ?? [];
-        all.push(...(batch as Transaccion[]));
-        if (batch.length < PAGE) break;
-        from += PAGE;
+        all.push(...((data ?? []) as Transaccion[]));
       }
       setTransacciones(all);
       setLoading(false);

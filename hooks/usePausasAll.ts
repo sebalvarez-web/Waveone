@@ -10,19 +10,25 @@ export function usePausasAll() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     const PAGE = 1000;
-    const all: Pausa[] = [];
-    let from = 0;
-    for (let i = 0; i < 200; i++) {
-      const { data, error } = await supabase
+    const { count, error: countErr } = await supabase
+      .from("pausas")
+      .select("id", { count: "exact", head: true });
+    if (countErr) { setPausas([]); setLoading(false); return; }
+    const total = count ?? 0;
+    if (total === 0) { setPausas([]); setLoading(false); return; }
+    const pages = Math.ceil(total / PAGE);
+    const reqs = Array.from({ length: pages }, (_, i) =>
+      supabase
         .from("pausas")
         .select("*")
         .order("año", { ascending: true })
-        .range(from, from + PAGE - 1);
+        .range(i * PAGE, i * PAGE + PAGE - 1)
+    );
+    const results = await Promise.all(reqs);
+    const all: Pausa[] = [];
+    for (const { data, error } of results) {
       if (error) { setPausas([]); setLoading(false); return; }
-      const batch = (data ?? []) as Pausa[];
-      all.push(...batch);
-      if (batch.length < PAGE) break;
-      from += PAGE;
+      all.push(...((data ?? []) as Pausa[]));
     }
     setPausas(all);
     setLoading(false);

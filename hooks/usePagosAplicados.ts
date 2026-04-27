@@ -10,21 +10,30 @@ export function usePagosAplicados(corredorId?: string) {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     const PAGE = 1000;
-    const all: PagoAplicado[] = [];
-    let from = 0;
-    for (let i = 0; i < 200; i++) {
+    // Count primero, luego páginas en paralelo
+    let countQ = supabase
+      .from("pagos_aplicados")
+      .select("id", { count: "exact", head: true });
+    if (corredorId) countQ = countQ.eq("corredor_id", corredorId);
+    const { count, error: countErr } = await countQ;
+    if (countErr) { setPagosAplicados([]); setLoading(false); return; }
+    const total = count ?? 0;
+    if (total === 0) { setPagosAplicados([]); setLoading(false); return; }
+    const pages = Math.ceil(total / PAGE);
+    const reqs = Array.from({ length: pages }, (_, i) => {
       let q = supabase
         .from("pagos_aplicados")
         .select("*")
         .order("created_at", { ascending: true })
-        .range(from, from + PAGE - 1);
+        .range(i * PAGE, i * PAGE + PAGE - 1);
       if (corredorId) q = q.eq("corredor_id", corredorId);
-      const { data, error } = await q;
+      return q;
+    });
+    const results = await Promise.all(reqs);
+    const all: PagoAplicado[] = [];
+    for (const { data, error } of results) {
       if (error) { setPagosAplicados([]); setLoading(false); return; }
-      const batch = (data ?? []) as PagoAplicado[];
-      all.push(...batch);
-      if (batch.length < PAGE) break;
-      from += PAGE;
+      all.push(...((data ?? []) as PagoAplicado[]));
     }
     setPagosAplicados(all);
     setLoading(false);
