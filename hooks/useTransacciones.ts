@@ -31,10 +31,13 @@ export function useTransacciones({ limit = 50, corredorId, soloIngresoPagado = f
           .eq("tipo", "ingreso")
           .eq("estado", "pagado")
           .order("fecha", { ascending: false })
+          .order("id", { ascending: false })
           .range(from, from + PAGE - 1);
         if (err) {
+          // No wipear data anterior; sólo loguear y mantener la última válida
+          // eslint-disable-next-line no-console
+          console.error("useTransacciones soloIngresoPagado error:", err);
           setError(err);
-          setTransacciones([]);
           setLoading(false);
           return;
         }
