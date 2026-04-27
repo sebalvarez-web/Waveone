@@ -8,7 +8,7 @@ import { usePagosAplicados } from "@/hooks/usePagosAplicados";
 import { usePausasAll } from "@/hooks/usePausasAll";
 import { calcularDeudas, MESES_ES, type MesEstado } from "@/lib/deudas";
 
-type SortKey = "deuda_desc" | "deuda_asc" | "nombre" | "monto_desc";
+type SortKey = "deuda_desc" | "deuda_asc" | "nombre" | "monto_desc" | "estatus";
 
 const CELDA: Record<MesEstado, string> = {
   pagado: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
@@ -81,6 +81,23 @@ export default function DeudasPage() {
       case "monto_desc":
         sorted.sort((a, b) => b.totalDeuda - a.totalDeuda);
         break;
+      case "estatus": {
+        // 0 = con deuda, 1 = pausado, 2 = al corriente
+        const rank = (d: typeof sorted[number]) => {
+          if (d.mesesDeudaCount > 0) return 0;
+          const ultimo = [...d.meses].reverse().find(m => m.estado !== "futuro");
+          if (ultimo?.estado === "pausa") return 1;
+          return 2;
+        };
+        sorted.sort((a, b) => {
+          const ra = rank(a);
+          const rb = rank(b);
+          if (ra !== rb) return ra - rb;
+          if (ra === 0) return b.mesesDeudaCount - a.mesesDeudaCount || b.totalDeuda - a.totalDeuda;
+          return a.corredor.nombre.localeCompare(b.corredor.nombre);
+        });
+        break;
+      }
     }
     return sorted;
   }, [deudas, search, soloConDeuda, sortKey]);
@@ -192,6 +209,7 @@ export default function DeudasPage() {
               <option value="deuda_desc">Más meses adeudados</option>
               <option value="deuda_asc">Menos meses adeudados</option>
               <option value="monto_desc">Mayor monto adeudado</option>
+              <option value="estatus">Estatus</option>
               <option value="nombre">Nombre A-Z</option>
             </select>
 
