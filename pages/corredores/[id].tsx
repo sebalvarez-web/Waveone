@@ -230,9 +230,9 @@ export default function CorredorPerfilPage() {
               <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
                 <h4 className="font-headline-sm">Historial de Pagos</h4>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-auto max-h-[60vh]">
                 <table className="w-full text-left">
-                  <thead>
+                  <thead className="sticky top-0 z-10">
                     <tr className="bg-surface-container-low border-b border-outline-variant">
                       <th className="px-6 py-3 font-label-caps text-outline text-xs">Fecha</th>
                       <th className="px-6 py-3 font-label-caps text-outline text-xs">Descripción</th>

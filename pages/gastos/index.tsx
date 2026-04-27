@@ -48,10 +48,10 @@ function TablaGastos({ rows, loading }: { rows: Transaccion[]; loading: boolean 
     );
   }
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-auto max-h-[60vh]">
       <table className="w-full text-sm tabular-nums">
-        <thead>
-          <tr className="border-b border-outline-variant/40 text-left bg-surface-container-low/40">
+        <thead className="sticky top-0 z-10 bg-surface-container-low">
+          <tr className="border-b border-outline-variant/40 text-left">
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">FECHA</th>
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">DESCRIPCIÓN</th>
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">CATEGORÍA</th>

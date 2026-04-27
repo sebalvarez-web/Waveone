@@ -37,10 +37,10 @@ export function TablaCorredores({ corredores, loading, onEdit, onDelete }: Tabla
 
   return (
     <div className="bg-white rounded-xl border border-outline-variant/60 overflow-hidden shadow-soft">
-      <div className="overflow-x-auto">
+      <div className="overflow-auto max-h-[60vh]">
         <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-surface-container-low/40 border-b border-outline-variant/40">
+          <thead className="sticky top-0 z-10 bg-white">
+            <tr className="bg-surface-container-low border-b border-outline-variant/40">
               {["NOMBRE", "INGRESO", "UNIFORME", "ESTADO", "PLAN", "ENTRENADOR", "PRÓXIMA CARRERA", ""].map((h) => (
                 <th key={h} className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant whitespace-nowrap">
                   {h}
