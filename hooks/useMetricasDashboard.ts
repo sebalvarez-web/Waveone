@@ -108,17 +108,10 @@ export function useMetricasDashboard() {
     }
 
     fetchMetricas();
-
-    const channel = supabase
-      .channel("metricas-transacciones-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "transacciones" },
-        () => { fetchMetricas(); }
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    // Realtime subscription on `transacciones` removed — con 5K+ filas y
+    // syncs activos disparaba refetches que bloqueaban el thread principal,
+    // colgando login redirect ("Page unresponsive"). Las métricas se refrescan
+    // en cada navegación al panel; aceptable para un dashboard.
   }, [supabase]);
 
   return { metricas, loading };
