@@ -13,14 +13,32 @@ interface EmailAdicional {
 interface FormCorredorProps {
   corredor?: Corredor;
   planes: Plan[];
+  coaches?: { id: string; nombre: string }[];
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorredorProps) {
+export function FormCorredor({ corredor, planes, coaches = [], onClose, onSuccess }: FormCorredorProps) {
   const supabase = useSupabaseClient();
   const user = useUser();
   const isEditing = !!corredor;
+  const [entrenadorId, setEntrenadorId] = useState<string>(corredor?.entrenador_id ?? "");
+  const [resolvedDefault, setResolvedDefault] = useState(false);
+
+  // Cuando el usuario logueado es un coach, default a su id; si es admin sin coach,
+  // dejamos vacío hasta que elija uno.
+  useEffect(() => {
+    if (corredor || resolvedDefault || !user) return;
+    supabase
+      .from("coaches")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.id) setEntrenadorId(data.id);
+        setResolvedDefault(true);
+      });
+  }, [supabase, user, corredor, resolvedDefault]);
 
   const { pausas, addPausa, removePausa } = usePausas(corredor?.id);
   const [nuevaPausa, setNuevaPausa] = useState({
@@ -65,8 +83,8 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
   const validate = () => {
     const e: Record<string, string> = {};
     if (!form.nombre.trim()) e.nombre = "El nombre es requerido";
-    if (!form.email.trim()) e.email = "El correo es requerido";
-    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Correo inválido";
+    if (form.email.trim() && !/\S+@\S+\.\S+/.test(form.email)) e.email = "Correo inválido";
+    if (!entrenadorId) e.entrenador = "Selecciona un coach";
     return e;
   };
 
@@ -81,8 +99,9 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
     setLoading(true);
     const payload = {
       ...form,
+      email: form.email.trim() || null,
       plan_id: form.plan_id || null,
-      entrenador_id: corredor?.entrenador_id ?? user!.id,
+      entrenador_id: entrenadorId,
     };
 
     let corredorId = corredor?.id;
@@ -205,7 +224,7 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
           </div>
 
           <div>
-            <label className="block font-label-caps text-outline mb-1 text-xs">CORREO PRINCIPAL *</label>
+            <label className="block font-label-caps text-outline mb-1 text-xs">CORREO PRINCIPAL</label>
             <input
               type="email"
               placeholder="correo@ejemplo.com"
@@ -354,6 +373,25 @@ export function FormCorredor({ corredor, planes, onClose, onSuccess }: FormCorre
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block font-label-caps text-outline mb-1 text-xs">
+                COACH {coaches.length === 0 && <span className="text-error normal-case">(sin coaches creados)</span>}
+              </label>
+              <select
+                value={entrenadorId}
+                onChange={e => setEntrenadorId(e.target.value)}
+                disabled={coaches.length === 0}
+                className="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-surface-container-low disabled:cursor-not-allowed"
+              >
+                <option value="">
+                  {coaches.length === 0 ? "Crea un coach primero en /coaches" : "Selecciona un coach…"}
+                </option>
+                {coaches.map((c) => (
+                  <option key={c.id} value={c.id}>{c.nombre}</option>
+                ))}
+              </select>
+              {errors.entrenador && <p className="text-error text-xs mt-1">{errors.entrenador}</p>}
+            </div>
             <div>
               <label className="block font-label-caps text-outline mb-1 text-xs">PLAN</label>
               <select

@@ -39,7 +39,15 @@ export interface Corredor {
   created_at: string;
   // joins opcionales
   plan?: Plan;
-  entrenador?: User;
+  entrenador?: Coach;
+}
+
+export interface Coach {
+  id: string;
+  nombre: string;
+  telefono: string | null;
+  auth_user_id: string | null;
+  created_at: string;
 }
 
 export interface Pausa {
@@ -63,6 +71,7 @@ export interface Transaccion {
   metodo: TransaccionMetodo;
   estado: TransaccionEstado;
   corredor_id: string | null;
+  pagado_a: string | null;
   stripe_payment_id: string | null;
   paypal_order_id: string | null;
   created_at: string;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Head from "next/head";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { Layout } from "@/components/layout/Layout";
@@ -6,13 +6,28 @@ import { TablaCorredores } from "@/components/corredores/TablaCorredores";
 import { FormCorredor } from "@/components/corredores/FormCorredor";
 import { useCorredores } from "@/hooks/useCorredores";
 import { usePlanes } from "@/hooks/usePlanes";
+import { useTransacciones } from "@/hooks/useTransacciones";
+import { usePagosAplicados } from "@/hooks/usePagosAplicados";
+import { usePausasAll } from "@/hooks/usePausasAll";
+import { calcularDeudas } from "@/lib/deudas";
 import { toast } from "@/components/ui/Toast";
 import type { Corredor, CorredorEstado } from "@/types/database";
+
+export interface CorredorBalance {
+  devengados: number;
+  pagados: number;
+  saldo: number;
+}
 
 type SortKey = "nombre_az" | "nombre_za" | "ingreso_desc" | "ingreso_asc" | "estado" | "plan";
 
 export default function CorredoresPage() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
   const [showForm, setShowForm] = useState(false);
   const [editingCorredor, setEditingCorredor] = useState<Corredor | undefined>();
   const supabase = useSupabaseClient();
@@ -22,31 +37,66 @@ export default function CorredoresPage() {
   const [sortKey, setSortKey] = useState<SortKey>("nombre_az");
   const [entrenadores, setEntrenadores] = useState<{ id: string; nombre: string }[]>([]);
   const { corredores, loading, refetch, deleteCorredor } = useCorredores({
-    search,
+    search: debouncedSearch,
     estado: filtroEstado,
     entrenadorId: filtroEntrenador,
     planId: filtroPlan,
   });
   const { planes } = usePlanes();
+  const { transacciones } = useTransacciones({ soloIngresoPagado: true });
+  const { pagosAplicados } = usePagosAplicados();
+  const { pausas } = usePausasAll();
 
-  const corredoresSorted = (() => {
+  const balances: Record<string, CorredorBalance> = useMemo(() => {
+    const result: Record<string, CorredorBalance> = {};
+    const deudas = calcularDeudas(corredores, transacciones, pausas, pagosAplicados);
+
+    // Sum total received per corredor from transacciones (ingresos pagados)
+    const totalPagadoPorCorredor: Record<string, number> = {};
+    for (const t of transacciones) {
+      if (t.tipo !== "ingreso" || t.estado !== "pagado" || !t.corredor_id) continue;
+      totalPagadoPorCorredor[t.corredor_id] = (totalPagadoPorCorredor[t.corredor_id] ?? 0) + Number(t.monto);
+    }
+
+    for (const d of deudas) {
+      const precio = d.corredor.plan?.precio_mensual ?? 0;
+      // Active months (excludes pausas and futuro)
+      const mesesActivos = d.meses.filter(m => m.estado === "pagado" || m.estado === "deuda").length;
+      const totalDevengado = mesesActivos * precio;
+      const totalPagado = totalPagadoPorCorredor[d.corredor.id] ?? 0;
+      // meses pagados = how many full months the payments cover
+      const mesesPagados = precio > 0 ? totalPagado / precio : 0;
+      // saldo positivo = crédito a favor del corredor; negativo = deuda
+      const saldo = totalPagado - totalDevengado;
+      result[d.corredor.id] = {
+        devengados: mesesActivos,
+        pagados: Math.round(mesesPagados * 10) / 10,
+        saldo,
+      };
+    }
+    return result;
+  }, [corredores, transacciones, pausas, pagosAplicados]);
+
+  const corredoresSorted = useMemo(() => {
     const arr = [...corredores];
+    const cmp = (a: string, b: string) =>
+      (a ?? "").trim().localeCompare((b ?? "").trim(), "es", { sensitivity: "base", numeric: true });
     switch (sortKey) {
-      case "nombre_az":    arr.sort((a, b) => a.nombre.localeCompare(b.nombre)); break;
-      case "nombre_za":    arr.sort((a, b) => b.nombre.localeCompare(a.nombre)); break;
+      case "nombre_az":    arr.sort((a, b) => cmp(a.nombre, b.nombre)); break;
+      case "nombre_za":    arr.sort((a, b) => cmp(b.nombre, a.nombre)); break;
       case "ingreso_desc": arr.sort((a, b) => (a.fecha_ingreso < b.fecha_ingreso ? 1 : -1)); break;
       case "ingreso_asc":  arr.sort((a, b) => (a.fecha_ingreso < b.fecha_ingreso ? -1 : 1)); break;
-      case "estado":       arr.sort((a, b) => a.estado.localeCompare(b.estado) || a.nombre.localeCompare(b.nombre)); break;
-      case "plan":         arr.sort((a, b) => (a.plan?.nombre ?? "~").localeCompare(b.plan?.nombre ?? "~") || a.nombre.localeCompare(b.nombre)); break;
+      case "estado":       arr.sort((a, b) => a.estado.localeCompare(b.estado) || cmp(a.nombre, b.nombre)); break;
+      case "plan":         arr.sort((a, b) => cmp(a.plan?.nombre ?? "~", b.plan?.nombre ?? "~") || cmp(a.nombre, b.nombre)); break;
     }
     return arr;
-  })();
+  }, [corredores, sortKey]);
 
   useEffect(() => {
     supabase
-      .from("users")
+      .from("coaches")
       .select("id, nombre")
-      .eq("rol", "entrenador")
+      .order("nombre", { ascending: true })
       .then(({ data }) => setEntrenadores(data ?? []));
   }, [supabase]);
 
@@ -54,6 +104,19 @@ export default function CorredoresPage() {
     const err = await deleteCorredor(id);
     if (err) toast.error("Error al eliminar el corredor");
     else toast.success("Corredor eliminado");
+  };
+
+  const handleChangeCoach = async (corredorId: string, coachId: string | null) => {
+    const { error: err } = await supabase
+      .from("corredores")
+      .update({ entrenador_id: coachId })
+      .eq("id", corredorId);
+    if (err) {
+      toast.error("No se pudo actualizar el entrenador");
+      return;
+    }
+    toast.success("Entrenador actualizado");
+    refetch();
   };
 
   const handleEdit = (corredor: Corredor) => {
@@ -169,9 +232,12 @@ export default function CorredoresPage() {
 
           <TablaCorredores
             corredores={corredoresSorted}
+            balances={balances}
             loading={loading}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            coaches={entrenadores}
+            onChangeCoach={handleChangeCoach}
           />
         </div>
 
@@ -179,6 +245,7 @@ export default function CorredoresPage() {
           <FormCorredor
             corredor={editingCorredor}
             planes={planes}
+            coaches={entrenadores}
             onClose={handleCloseForm}
             onSuccess={refetch}
           />

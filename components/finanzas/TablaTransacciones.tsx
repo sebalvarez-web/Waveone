@@ -32,8 +32,9 @@ export function TablaTransacciones({ transacciones, loading, onRefund }: TablaTr
   }
 
   return (
+    <div className="overflow-auto max-h-[60vh]">
     <table className="w-full text-left border-collapse">
-      <thead>
+      <thead className="sticky top-0 z-10 bg-surface-container-lowest">
         <tr className="bg-surface-container-lowest border-b border-slate-100">
           {["FECHA", "ENTIDAD", "CATEGORÍA", "CANTIDAD", "ESTADO", "FUENTE", ...(onRefund ? ["ACCIONES"] : [])].map((h) => (
             <th key={h} className="px-md py-4 font-label-caps text-on-surface-variant text-xs">
@@ -96,5 +97,6 @@ export function TablaTransacciones({ transacciones, loading, onRefund }: TablaTr
         ))}
       </tbody>
     </table>
+    </div>
   );
 }

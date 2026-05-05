@@ -6,6 +6,7 @@ import { TablaTransacciones } from "@/components/finanzas/TablaTransacciones";
 import { useTransacciones } from "@/hooks/useTransacciones";
 import { useCorredores } from "@/hooks/useCorredores";
 import { PagosSinAsignar } from "@/components/pagos/PagosSinAsignar";
+import { GraficasFinanzas } from "@/components/finanzas/GraficasFinanzas";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import toast from "react-hot-toast";
 
@@ -14,7 +15,7 @@ function fmt(n: number) {
 }
 
 export default function FinanzasPage() {
-  const { transacciones, loading, refetch } = useTransacciones({ limit: 100 });
+  const { transacciones, loading, refetch } = useTransacciones({ fetchAll: true });
   const { corredores } = useCorredores();
   const supabase = useSupabaseClient();
 
@@ -29,8 +30,13 @@ export default function FinanzasPage() {
 
   const ingresos = transacciones.filter((t) => t.tipo === "ingreso");
   const gastos = transacciones.filter((t) => t.tipo === "gasto");
-  const totalIngresos = ingresos.reduce((s, t) => s + Number(t.monto), 0);
-  const totalGastos = gastos.reduce((s, t) => s + Number(t.monto), 0);
+  // KPIs reflect cleared cash: pagado-only. Pendiente/vencido/reembolsado are
+  // shown elsewhere (gastosPendientes card + ledger table) and must not inflate
+  // saldo líquido.
+  const ingresosPagados = ingresos.filter((t) => t.estado === "pagado");
+  const gastosPagados = gastos.filter((t) => t.estado === "pagado");
+  const totalIngresos = ingresosPagados.reduce((s, t) => s + Number(t.monto), 0);
+  const totalGastos = gastosPagados.reduce((s, t) => s + Number(t.monto), 0);
   const saldoLiquido = totalIngresos - totalGastos;
   const gastosPendientes = gastos.filter((t) => t.estado === "pendiente");
   const totalGastosPendientes = gastosPendientes.reduce((s, t) => s + Number(t.monto), 0);
@@ -67,7 +73,7 @@ export default function FinanzasPage() {
             <p className="text-3xl font-headline font-bold text-secondary mt-2 tabular-nums tracking-tight">
               ${fmt(totalIngresos)}
             </p>
-            <p className="text-[11px] text-on-surface-variant mt-1">{ingresos.length} entradas</p>
+            <p className="text-[11px] text-on-surface-variant mt-1">{ingresosPagados.length} entradas pagadas</p>
           </div>
           <div className="bg-white border border-outline-variant/60 rounded-xl p-5 shadow-soft">
             <div className="flex items-center justify-between mb-1">
@@ -80,6 +86,8 @@ export default function FinanzasPage() {
             <p className="text-[11px] text-on-surface-variant mt-1">{gastosPendientes.length} por aprobar</p>
           </div>
         </div>
+
+        <GraficasFinanzas transacciones={transacciones} />
 
         {/* Forms grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">

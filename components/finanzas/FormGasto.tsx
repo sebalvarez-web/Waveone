@@ -1,20 +1,75 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { toast } from "@/components/ui/Toast";
+import { CATEGORIAS_GASTO } from "@/lib/categorias";
 
 interface FormGastoProps {
   onSuccess: () => void;
+}
+
+interface GastoMemoria {
+  pagado_a: string;
+  categoria: string | null;
+  descripcion: string | null;
+  fecha: string;
 }
 
 export function FormGasto({ onSuccess }: FormGastoProps) {
   const supabase = useSupabaseClient();
   const [form, setForm] = useState({
     descripcion: "",
-    categoria: "instalaciones",
+    pagado_a: "",
+    categoria: CATEGORIAS_GASTO[0].slug,
     monto: "",
     fecha: new Date().toISOString().split("T")[0],
   });
   const [loading, setLoading] = useState(false);
+  const [memoria, setMemoria] = useState<GastoMemoria[]>([]);
+
+  // Carga el "diccionario" de destinatarios + último uso por destinatario
+  useEffect(() => {
+    supabase
+      .from("transacciones")
+      .select("pagado_a, categoria, descripcion, fecha")
+      .eq("tipo", "gasto")
+      .not("pagado_a", "is", null)
+      .order("fecha", { ascending: false })
+      .limit(500)
+      .then(({ data }) => {
+        if (data) setMemoria(data as GastoMemoria[]);
+      });
+  }, [supabase]);
+
+  // Sugerencias únicas (último valor por nombre, ya que viene ordenado por fecha desc)
+  const sugerencias = useMemo(() => {
+    const seen = new Set<string>();
+    const out: GastoMemoria[] = [];
+    for (const m of memoria) {
+      const key = (m.pagado_a ?? "").trim();
+      if (!key) continue;
+      const k = key.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(m);
+    }
+    return out;
+  }, [memoria]);
+
+  // Auto-fill al elegir un destinatario conocido
+  const handlePagadoAChange = (value: string) => {
+    setForm((p) => ({ ...p, pagado_a: value }));
+    const match = sugerencias.find(
+      (s) => s.pagado_a.trim().toLowerCase() === value.trim().toLowerCase()
+    );
+    if (match) {
+      setForm((p) => ({
+        ...p,
+        pagado_a: value,
+        categoria: match.categoria || p.categoria,
+        descripcion: p.descripcion || match.descripcion || "",
+      }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +79,7 @@ export function FormGasto({ onSuccess }: FormGastoProps) {
     const { error } = await supabase.from("transacciones").insert({
       tipo: "gasto",
       descripcion: form.descripcion,
+      pagado_a: form.pagado_a.trim() || null,
       categoria: form.categoria,
       monto: Number(form.monto),
       fecha: form.fecha,
@@ -35,21 +91,39 @@ export function FormGasto({ onSuccess }: FormGastoProps) {
     if (error) { toast.error("Error al registrar el gasto"); return; }
     toast.success("Gasto registrado");
     onSuccess();
-    setForm({ ...form, descripcion: "", monto: "" });
+    setForm({ ...form, descripcion: "", monto: "", pagado_a: "" });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1">
-        <label className="font-label-caps text-on-surface-variant block text-xs">DESCRIPCIÓN *</label>
-        <input
-          type="text"
-          placeholder="ej., Alquiler de Pista - Estadio Local"
-          value={form.descripcion}
-          onChange={(e) => setForm((p) => ({ ...p, descripcion: e.target.value }))}
-          required
-          className="w-full rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary text-sm py-2 px-3"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <label className="font-label-caps text-on-surface-variant block text-xs">PAGADO A</label>
+          <input
+            type="text"
+            list="pagado-a-sugerencias"
+            placeholder="ej., Estadio Local S.A."
+            value={form.pagado_a}
+            onChange={(e) => handlePagadoAChange(e.target.value)}
+            className="w-full rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary text-sm py-2 px-3"
+          />
+          <datalist id="pagado-a-sugerencias">
+            {sugerencias.map((s) => (
+              <option key={s.pagado_a} value={s.pagado_a} />
+            ))}
+          </datalist>
+        </div>
+        <div className="space-y-1">
+          <label className="font-label-caps text-on-surface-variant block text-xs">DESCRIPCIÓN *</label>
+          <input
+            type="text"
+            placeholder="ej., Alquiler de Pista"
+            value={form.descripcion}
+            onChange={(e) => setForm((p) => ({ ...p, descripcion: e.target.value }))}
+            required
+            className="w-full rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary text-sm py-2 px-3"
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
@@ -59,11 +133,9 @@ export function FormGasto({ onSuccess }: FormGastoProps) {
             onChange={(e) => setForm((p) => ({ ...p, categoria: e.target.value }))}
             className="w-full rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary text-sm py-2.5 px-3"
           >
-            <option value="instalaciones">Alquiler de Instalaciones</option>
-            <option value="equipamiento">Equipamiento</option>
-            <option value="viaje">Viaje y Alojamiento</option>
-            <option value="marketing">Marketing</option>
-            <option value="otro">Otro</option>
+            {CATEGORIAS_GASTO.map((c) => (
+              <option key={c.slug} value={c.slug}>{c.label}</option>
+            ))}
           </select>
         </div>
         <div className="space-y-1">

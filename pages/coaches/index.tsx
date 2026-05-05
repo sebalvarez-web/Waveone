@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/router";
 import { Layout } from "@/components/layout/Layout";
-import type { User } from "@/types/database";
+import type { Coach } from "@/types/database";
 
-interface CoachRow extends User {
+interface CoachRow extends Coach {
   totalCorredores: number;
   corredoresActivos: number;
 }
@@ -18,29 +18,71 @@ export default function CoachesPage() {
   const [coaches, setCoaches] = useState<CoachRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRol, setUserRol] = useState<string>("");
+  const [showForm, setShowForm] = useState(false);
+  const [nuevoNombre, setNuevoNombre] = useState("");
+  const [nuevoTelefono, setNuevoTelefono] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const handleCrear = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    setFormError(null);
+    try {
+      const res = await fetch("/api/admin/crear-coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: nuevoNombre, telefono: nuevoTelefono }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Error al crear coach");
+      setNuevoNombre("");
+      setNuevoTelefono("");
+      setShowForm(false);
+      setReloadKey(k => k + 1);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Error");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("users")
-      .select("rol")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => {
-        const rol = data?.rol ?? "";
-        setUserRol(rol);
-        if (rol === "entrenador") {
-          router.replace(`/coaches/${user.id}`);
-        }
-      });
+    (async () => {
+      // 1) ¿Es admin?
+      const { data: adminRow } = await supabase
+        .from("users")
+        .select("rol")
+        .or(`auth_user_id.eq.${user.id},id.eq.${user.id}`)
+        .eq("rol", "admin")
+        .maybeSingle();
+      if (adminRow) { setUserRol("admin"); return; }
+
+      // 2) ¿Es coach? → redirigir a su detalle
+      const { data: coachRow } = await supabase
+        .from("coaches")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      if (coachRow?.id) {
+        setUserRol("entrenador");
+        router.replace(`/coaches/${coachRow.id}`);
+        return;
+      }
+      setUserRol("none");
+    })();
   }, [user, supabase, router]);
 
   useEffect(() => {
-    if (userRol !== "admin") return;
+    if (userRol === "") return; // still resolving role
+    if (userRol !== "admin") { setLoading(false); return; }
+    setLoading(true);
     supabase
-      .from("users")
+      .from("coaches")
       .select("*")
-      .eq("rol", "entrenador")
+      .order("nombre", { ascending: true })
       .then(async ({ data: entrenadores }) => {
         if (!entrenadores) { setLoading(false); return; }
         const rows = await Promise.all(
@@ -59,7 +101,7 @@ export default function CoachesPage() {
         setCoaches(rows);
         setLoading(false);
       });
-  }, [userRol, supabase]);
+  }, [userRol, supabase, reloadKey]);
 
   if (userRol === "entrenador") return null;
 
@@ -68,13 +110,62 @@ export default function CoachesPage() {
       <Head><title>Wave One — Coaches</title></Head>
       <Layout>
         <div className="space-y-6">
-          <div>
-            <p className="text-label-caps text-on-surface-variant mb-2">EQUIPO</p>
-            <h2 className="text-headline-lg text-on-background font-headline">Coaches</h2>
-            <p className="text-body-md text-on-surface-variant mt-1">
-              Entrenadores activos y sus equipos asignados.
-            </p>
+          <div className="flex justify-between items-end gap-4 flex-wrap">
+            <div>
+              <p className="text-label-caps text-on-surface-variant mb-2">EQUIPO</p>
+              <h2 className="text-headline-lg text-on-background font-headline">Coaches</h2>
+              <p className="text-body-md text-on-surface-variant mt-1">
+                Entrenadores activos y sus equipos asignados.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowForm(v => !v)}
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-soft ${
+                showForm
+                  ? "bg-white border border-outline-variant text-on-surface hover:bg-surface-container-low"
+                  : "bg-primary text-white hover:bg-primary-fixed"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">{showForm ? "close" : "add"}</span>
+              {showForm ? "Cancelar" : "Añadir coach"}
+            </button>
           </div>
+
+          {showForm && (
+            <form
+              onSubmit={handleCrear}
+              className="bg-white border border-outline-variant/60 rounded-xl p-5 shadow-soft grid grid-cols-1 md:grid-cols-3 gap-3 items-end"
+            >
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-on-surface-variant block mb-1">NOMBRE</label>
+                <input
+                  required
+                  value={nuevoNombre}
+                  onChange={e => setNuevoNombre(e.target.value)}
+                  className="w-full border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold tracking-wider text-on-surface-variant block mb-1">TELÉFONO (OPCIONAL)</label>
+                <input
+                  value={nuevoTelefono}
+                  onChange={e => setNuevoTelefono(e.target.value)}
+                  className="w-full border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="px-3.5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-fixed transition-colors disabled:opacity-60"
+                >
+                  {creating ? "Creando…" : "Crear coach"}
+                </button>
+                {formError && <p className="text-[11px] text-error">{formError}</p>}
+                <p className="text-[10px] text-on-surface-variant">Coach independiente, sin acceso a la plataforma.</p>
+              </div>
+            </form>
+          )}
 
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -103,7 +194,7 @@ export default function CoachesPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="text-headline-sm font-headline text-on-surface truncate">{c.nombre}</h3>
-                        <p className="text-xs text-on-surface-variant truncate">{c.email}</p>
+                        {c.telefono && <p className="text-xs text-on-surface-variant truncate">{c.telefono}</p>}
                       </div>
                       <span className="material-symbols-outlined text-outline group-hover:text-accent group-hover:translate-x-0.5 transition-all">
                         arrow_forward

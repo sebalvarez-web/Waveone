@@ -55,18 +55,22 @@ export function Sidebar({
   return (
     <aside className={sidebarClass}>
       {/* Brand */}
-      <div className={`pt-6 pb-4 ${collapsed ? "px-3" : "px-5"}`}>
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-[#FF8A6B] flex items-center justify-center shadow-pop flex-shrink-0">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 12c2-2 3.5-2 5 0s3 2 5 0 3.5-2 5 0 3 2 5 0" />
-              <path d="M2 17c2-2 3.5-2 5 0s3 2 5 0 3.5-2 5 0 3 2 5 0" opacity="0.6" />
-            </svg>
+      <div className={`pt-5 pb-4 border-b border-white/[0.07] ${collapsed ? "px-3" : "px-5"}`}>
+        <Link href="/" className={`flex items-center gap-3 group ${collapsed ? "justify-center" : ""}`}>
+          {/* Wave One logo mark */}
+          <div className="flex-shrink-0" style={{ width: 46, height: 27 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Wave One" style={{ width: "100%", height: "100%", objectFit: "contain", filter: "brightness(0) invert(1)" }} />
           </div>
           {!collapsed && (
-            <div className="min-w-0">
-              <h1 className="text-[17px] font-headline font-bold text-white tracking-tight leading-none">Wave One</h1>
-              <p className="text-[10px] text-white/50 font-medium tracking-wider mt-1">ADMIN</p>
+            <div className="min-w-0 leading-none">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[18px] font-headline font-extrabold text-white tracking-tight leading-none">WAVE</span>
+                <span className="text-[18px] font-headline font-extrabold leading-none" style={{ color: "#C8FF00" }}>ONE</span>
+              </div>
+              <p className="text-[9px] font-bold tracking-[0.18em] mt-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                DASHBOARD
+              </p>
             </div>
           )}
         </Link>
@@ -155,23 +159,25 @@ function NavLink({ href, icon, label, active, collapsed, onMobileClose, badge }:
         collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5"
       } ${
         active
-          ? "bg-white text-primary shadow-soft"
-          : "text-white/70 hover:text-white hover:bg-white/[0.06]"
+          ? "text-white"
+          : "text-white/60 hover:text-white hover:bg-white/[0.05]"
       }`}
+      style={active ? {
+        background: "rgba(200,255,0,0.12)",
+        boxShadow: "inset 3px 0 0 #C8FF00",
+      } : undefined}
     >
       <span className={`material-symbols-outlined text-[20px] ${active ? "fill" : ""}`}>{icon}</span>
       {!collapsed && (
         <span className={`text-sm ml-3 ${active ? "font-semibold" : "font-medium"}`}>{label}</span>
       )}
       {!collapsed && badge !== undefined && (
-        <span className={`ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full ${
-          active ? "bg-accent text-white" : "bg-accent text-white"
-        }`}>
+        <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full text-primary" style={{ background: "#C8FF00" }}>
           {badge}
         </span>
       )}
       {collapsed && badge !== undefined && (
-        <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full ring-2 ring-primary" />
+        <span className="absolute top-1 right-1 w-2 h-2 rounded-full ring-2 ring-primary" style={{ background: "#C8FF00" }} />
       )}
       {collapsed && (
         <span className="absolute left-full ml-3 px-2.5 py-1.5 bg-primary text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-pop font-medium">

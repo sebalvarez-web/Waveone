@@ -2,13 +2,14 @@ import Head from "next/head";
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { FormGasto } from "@/components/finanzas/FormGasto";
+import { GraficaGastos } from "@/components/gastos/GraficaGastos";
+import { ModalEditarTransaccion } from "@/components/finanzas/ModalEditarTransaccion";
 import { useTransacciones } from "@/hooks/useTransacciones";
+import { CATEGORIAS_GASTO, labelCategoriaGasto } from "@/lib/categorias";
 import type { Transaccion, TransaccionEstado } from "@/types/database";
 
 type FiltroEstado = "todos" | TransaccionEstado;
 type FiltroCategoria = "todos" | string;
-
-const CATEGORIAS = ["instalaciones", "equipamiento", "viaje", "marketing", "otro"];
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -29,7 +30,7 @@ function BadgeEstado({ estado }: { estado: string }) {
   );
 }
 
-function TablaGastos({ rows, loading }: { rows: Transaccion[]; loading: boolean }) {
+function TablaGastos({ rows, loading, onEdit }: { rows: Transaccion[]; loading: boolean; onEdit: (t: Transaccion) => void }) {
   if (loading) {
     return (
       <div className="p-6 space-y-2">
@@ -54,9 +55,11 @@ function TablaGastos({ rows, loading }: { rows: Transaccion[]; loading: boolean 
           <tr className="border-b border-outline-variant/40 text-left">
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">FECHA</th>
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">DESCRIPCIÓN</th>
+            <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">PAGADO A</th>
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">CATEGORÍA</th>
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">ESTADO</th>
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant text-right">MONTO</th>
+            <th className="px-5 py-3 w-10" />
           </tr>
         </thead>
         <tbody className="divide-y divide-outline-variant/30">
@@ -66,14 +69,26 @@ function TablaGastos({ rows, loading }: { rows: Transaccion[]; loading: boolean 
                 {new Date(t.fecha).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
               </td>
               <td className="px-5 py-3.5 text-on-surface font-semibold max-w-xs truncate">{t.descripcion}</td>
+              <td className="px-5 py-3.5 text-on-surface-variant max-w-[200px] truncate">
+                {t.pagado_a || <span className="text-outline">—</span>}
+              </td>
               <td className="px-5 py-3.5">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-surface-container-low text-on-surface-variant capitalize">
-                  {t.categoria}
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-surface-container-low text-on-surface-variant">
+                  {labelCategoriaGasto(t.categoria)}
                 </span>
               </td>
               <td className="px-5 py-3.5"><BadgeEstado estado={t.estado} /></td>
               <td className="px-5 py-3.5 text-right font-mono text-error font-semibold">
                 −${fmt(Number(t.monto))}
+              </td>
+              <td className="px-3 py-3.5">
+                <button
+                  onClick={() => onEdit(t)}
+                  className="p-1 rounded hover:bg-surface-container-low text-outline hover:text-on-surface transition-colors"
+                  title="Editar"
+                >
+                  <span className="material-symbols-outlined text-[16px]">edit</span>
+                </button>
               </td>
             </tr>
           ))}
@@ -84,10 +99,11 @@ function TablaGastos({ rows, loading }: { rows: Transaccion[]; loading: boolean 
 }
 
 export default function GastosPage() {
-  const { transacciones, loading, refetch } = useTransacciones({ limit: 500 });
+  const { transacciones, loading, refetch } = useTransacciones({ fetchAll: true, tipo: "gasto", withCorredor: false });
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>("todos");
   const [filtroCategoria, setFiltroCategoria] = useState<FiltroCategoria>("todos");
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [editando, setEditando] = useState<Transaccion | null>(null);
 
   const gastos = transacciones.filter(t => t.tipo === "gasto");
 
@@ -142,6 +158,8 @@ export default function GastosPage() {
           <KpiGasto label="VENCIDOS" total={totalVencidos} count={gastos.filter(t=>t.estado==="vencido").length} tone="danger" />
         </div>
 
+        <GraficaGastos transacciones={transacciones} />
+
         {/* Form colapsable */}
         {mostrarForm && (
           <div className="bg-white border border-outline-variant/60 rounded-xl p-5 mb-6 shadow-soft">
@@ -166,8 +184,8 @@ export default function GastosPage() {
               className="border border-outline-variant bg-white rounded-lg px-3 py-1.5 text-xs font-semibold text-on-surface-variant focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all cursor-pointer"
             >
               <option value="todos">Todas las categorías</option>
-              {CATEGORIAS.map(c => (
-                <option key={c} value={c} className="capitalize">{c}</option>
+              {CATEGORIAS_GASTO.map(c => (
+                <option key={c.slug} value={c.slug}>{c.label}</option>
               ))}
             </select>
             <select
@@ -181,7 +199,7 @@ export default function GastosPage() {
               <option value="vencido">Vencido</option>
             </select>
           </div>
-          <TablaGastos rows={filtered} loading={loading} />
+          <TablaGastos rows={filtered} loading={loading} onEdit={setEditando} />
           {!loading && filtered.length > 0 && (
             <div className="px-5 py-3 bg-surface-container-low/40 border-t border-outline-variant/40 flex justify-between text-xs text-on-surface-variant">
               <span>
@@ -192,6 +210,14 @@ export default function GastosPage() {
           )}
         </div>
       </Layout>
+
+      {editando && (
+        <ModalEditarTransaccion
+          transaccion={editando}
+          onClose={() => setEditando(null)}
+          onSuccess={() => { setEditando(null); refetch(); }}
+        />
+      )}
     </>
   );
 }

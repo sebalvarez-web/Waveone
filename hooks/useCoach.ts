@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
-import type { User, Corredor, Transaccion, HistorialItem } from "@/types/database";
+import type { Coach, Corredor, Transaccion, HistorialItem } from "@/types/database";
 
 export interface CoachStats {
-  coach: User;
+  coach: Coach;
   corredores: Corredor[];
   transacciones: Transaccion[];
   historial: HistorialItem[];
@@ -25,7 +25,7 @@ export function useCoach(coachId: string | undefined) {
     const inicioMesStr = inicioMes.toISOString().split("T")[0];
 
     const [{ data: coach }, { data: corredores }] = await Promise.all([
-      supabase.from("users").select("*").eq("id", coachId).single(),
+      supabase.from("coaches").select("*").eq("id", coachId).single(),
       supabase
         .from("corredores")
         .select("*, plan:planes(id, nombre, precio_mensual)")
@@ -57,7 +57,7 @@ export function useCoach(coachId: string | undefined) {
     ]);
 
     setStats({
-      coach: coach as User,
+      coach: coach as Coach,
       corredores: corredores as Corredor[],
       transacciones: (transacciones ?? []) as Transaccion[],
       historial: (historial ?? []) as HistorialItem[],

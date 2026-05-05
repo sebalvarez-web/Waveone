@@ -6,14 +6,16 @@ import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { Layout } from "@/components/layout/Layout";
 import { FormCorredor } from "@/components/corredores/FormCorredor";
 import { ModalNotaHistorial } from "@/components/corredores/ModalNotaHistorial";
+import { ModalEditarTransaccion } from "@/components/finanzas/ModalEditarTransaccion";
 import { usePlanes } from "@/hooks/usePlanes";
 import { useTransacciones } from "@/hooks/useTransacciones";
 import { usePagosAplicados } from "@/hooks/usePagosAplicados";
 import { usePausas } from "@/hooks/usePausas";
+import { useCambiosPlan } from "@/hooks/useCambiosPlan";
 import { useHistorialCorredor } from "@/hooks/useHistorialCorredor";
 import { toast } from "@/components/ui/Toast";
 import { calcularDeudas, MESES_ES } from "@/lib/deudas";
-import type { Corredor, CorredorEmail, HistorialItem } from "@/types/database";
+import type { Corredor, CorredorEmail, HistorialItem, Transaccion } from "@/types/database";
 
 const ESTADO_COLOR: Record<string, string> = {
   pagado: "bg-secondary/10 text-secondary",
@@ -62,24 +64,41 @@ export default function CorredorPerfilPage() {
   const { id } = router.query as { id: string };
   const supabase = useSupabaseClient();
   const { planes } = usePlanes();
-  const { transacciones } = useTransacciones({ corredorId: id });
+  const { transacciones, refetch: refetchTransacciones } = useTransacciones({ corredorId: id });
   const { pagosAplicados } = usePagosAplicados(id);
   const { pausas } = usePausas(id);
+  const { cambios: cambiosPlan } = useCambiosPlan(id);
   const { historial, loading: loadingHistorial, refetch: refetchHistorial } = useHistorialCorredor(id);
 
   const [corredor, setCorredor] = useState<Corredor | null>(null);
+  const [coaches, setCoaches] = useState<{ id: string; nombre: string }[]>([]);
   const [emailsAdicionales, setEmailsAdicionales] = useState<CorredorEmail[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("coaches")
+      .select("id, nombre")
+      .order("nombre", { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.error("[coaches fetch]", error);
+        }
+        setCoaches((data ?? []) as { id: string; nombre: string }[]);
+      });
+  }, [supabase]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showNotaModal, setShowNotaModal] = useState(false);
   const [nota, setNota] = useState("");
   const [guardandoNota, setGuardandoNota] = useState(false);
+  const [editandoTx, setEditandoTx] = useState<Transaccion | null>(null);
 
   const fetchCorredor = () => {
     if (!id) return;
     supabase
       .from("corredores")
-      .select(`*, plan:planes(*), entrenador:users(id, nombre, email)`)
+      .select(`*, plan:planes(*), entrenador:coaches(id, nombre)`)
       .eq("id", id)
       .single()
       .then(({ data }) => {
@@ -102,13 +121,55 @@ export default function CorredorPerfilPage() {
 
   const deudaData = useMemo(() => {
     if (!corredor) return null;
-    const result = calcularDeudas([corredor], transacciones, pausas, pagosAplicados);
+    const result = calcularDeudas(
+      [corredor],
+      transacciones,
+      pausas,
+      pagosAplicados,
+      cambiosPlan,
+      planes
+    );
     return result[0] ?? null;
-  }, [corredor, transacciones, pausas, pagosAplicados]);
+  }, [corredor, transacciones, pausas, pagosAplicados, cambiosPlan, planes]);
 
-  const saldo = transacciones.reduce((acc, t) => {
-    return t.tipo === "ingreso" ? acc + Number(t.monto) : acc - Number(t.monto);
-  }, 0);
+  const totalCobrado = useMemo(
+    () =>
+      transacciones
+        .filter((t) => t.tipo === "ingreso" && t.estado === "pagado")
+        .reduce((acc, t) => acc + Number(t.monto), 0),
+    [transacciones]
+  );
+
+  const totalDevengado = useMemo(() => {
+    if (!deudaData) return 0;
+    return deudaData.meses
+      .filter((m) => m.estado !== "futuro")
+      .reduce((acc, m) => acc + m.monto, 0);
+  }, [deudaData]);
+
+  const saldo = totalCobrado - totalDevengado;
+
+  // Map transaccion_id → list of "Ene '25" strings of months this tx covered.
+  // Used by Historial de Pagos to surface oldest-first assignment & flag
+  // transactions whose RPC aplicar_pago failed (no pa rows).
+  const aplicadosPorTx = useMemo(() => {
+    const map = new Map<string, { año: number; mes: number }[]>();
+    for (const pa of pagosAplicados) {
+      const arr = map.get(pa.transaccion_id) ?? [];
+      arr.push({ año: pa.año, mes: pa.mes });
+      map.set(pa.transaccion_id, arr);
+    }
+    for (const arr of map.values()) {
+      arr.sort((a, b) => a.año - b.año || a.mes - b.mes);
+    }
+    return map;
+  }, [pagosAplicados]);
+
+  const formatAplicados = (txId: string) => {
+    const meses = aplicadosPorTx.get(txId);
+    if (!meses || meses.length === 0) return null;
+    return meses.map(m => `${MESES_ES[m.mes - 1]} '${String(m.año).slice(-2)}`).join(", ");
+  };
 
   if (loading) {
     return (
@@ -186,6 +247,72 @@ export default function CorredorPerfilPage() {
                   </div>
                 </div>
 
+                {(corredor.stripe_customer_id || corredor.stripe_subscription_id || corredor.paypal_payer_id || corredor.paypal_subscription_id) && (
+                  <div>
+                    <p className="font-label-caps text-outline text-xs mb-2">IDs DE PAGO</p>
+                    <div className="space-y-2">
+                      {corredor.stripe_customer_id && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#635BFF" }} />
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-outline font-semibold tracking-wide">STRIPE CUSTOMER</p>
+                            <a
+                              href={`https://dashboard.stripe.com/customers/${corredor.stripe_customer_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={corredor.stripe_customer_id}
+                              className="text-xs font-mono hover:underline truncate block"
+                              style={{ color: "#635BFF" }}
+                            >
+                              {corredor.stripe_customer_id}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                      {corredor.stripe_subscription_id && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#635BFF" }} />
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-outline font-semibold tracking-wide">STRIPE SUSCRIPCIÓN</p>
+                            <a
+                              href={`https://dashboard.stripe.com/subscriptions/${corredor.stripe_subscription_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={corredor.stripe_subscription_id}
+                              className="text-xs font-mono hover:underline truncate block"
+                              style={{ color: "#635BFF" }}
+                            >
+                              {corredor.stripe_subscription_id}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                      {corredor.paypal_payer_id && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#009CDE" }} />
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-outline font-semibold tracking-wide">PAYPAL PAYER ID</p>
+                            <p className="text-xs font-mono text-on-surface truncate" title={corredor.paypal_payer_id}>
+                              {corredor.paypal_payer_id}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {corredor.paypal_subscription_id && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#009CDE" }} />
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-outline font-semibold tracking-wide">PAYPAL SUSCRIPCIÓN</p>
+                            <p className="text-xs font-mono text-on-surface truncate" title={corredor.paypal_subscription_id}>
+                              {corredor.paypal_subscription_id}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {corredor.telefono_emergencia && (
                   <div>
                     <p className="font-label-caps text-outline text-xs mb-1">EMERGENCIA</p>
@@ -211,7 +338,7 @@ export default function CorredorPerfilPage() {
               <div className="relative z-10">
                 <p className="text-white/80 font-label-caps text-xs">SALDO ACUMULADO</p>
                 <p className="text-3xl font-bold font-body mt-1">
-                  {saldo >= 0 ? "+" : ""}${Math.abs(saldo).toFixed(2)}
+                  {saldo >= 0 ? "+" : ""}${Math.round(Math.abs(saldo)).toLocaleString("en-US")}
                 </p>
                 <p className="text-white/80 text-sm mt-3">
                   Plan: ${corredor.plan?.precio_mensual?.toFixed(2) ?? "0.00"}/mes
@@ -221,6 +348,32 @@ export default function CorredorPerfilPage() {
                 <span className="material-symbols-outlined text-[100px]">payments</span>
               </div>
             </div>
+
+            {deudaData && (
+              <div className="bg-white border border-outline-variant rounded-xl p-5 shadow-sm grid grid-cols-3 divide-x divide-outline-variant/50">
+                <div className="pr-4 flex flex-col items-center text-center">
+                  <p className="font-label-caps text-outline text-[10px] mb-1">DEVENGADO</p>
+                  <p className="text-xl font-bold font-headline text-on-surface font-data-mono">
+                    ${Math.round(totalDevengado).toLocaleString("en-US")}
+                  </p>
+                  <p className="text-[10px] text-outline mt-0.5">total</p>
+                </div>
+                <div className="px-4 flex flex-col items-center text-center">
+                  <p className="font-label-caps text-outline text-[10px] mb-1">COBRADO</p>
+                  <p className="text-xl font-bold font-headline text-secondary font-data-mono">
+                    ${Math.round(totalCobrado).toLocaleString("en-US")}
+                  </p>
+                  <p className="text-[10px] text-outline mt-0.5">total</p>
+                </div>
+                <div className="pl-4 flex flex-col items-center text-center">
+                  <p className="font-label-caps text-outline text-[10px] mb-1">SALDO</p>
+                  <p className={`text-xl font-bold font-headline font-data-mono ${saldo >= 0 ? "text-secondary" : "text-error"}`}>
+                    {saldo >= 0 ? "+" : "−"}${Math.round(Math.abs(saldo)).toLocaleString("en-US")}
+                  </p>
+                  <p className="text-[10px] text-outline mt-0.5">{saldo >= 0 ? "a favor" : "en contra"}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Columna derecha */}
@@ -238,18 +391,20 @@ export default function CorredorPerfilPage() {
                       <th className="px-6 py-3 font-label-caps text-outline text-xs">Descripción</th>
                       <th className="px-6 py-3 font-label-caps text-outline text-xs">Método</th>
                       <th className="px-6 py-3 font-label-caps text-outline text-xs">Estado</th>
+                      <th className="px-6 py-3 font-label-caps text-outline text-xs">Aplicado a</th>
                       <th className="px-6 py-3 font-label-caps text-outline text-xs text-right">Monto</th>
+                      <th className="px-3 py-3 w-10" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-outline-variant/30">
-                    {transacciones.length === 0 && (
+                    {transacciones.filter((t) => t.tipo === "ingreso").length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-outline text-sm">
+                        <td colSpan={7} className="px-6 py-8 text-center text-outline text-sm">
                           Sin transacciones registradas.
                         </td>
                       </tr>
                     )}
-                    {transacciones.map((t) => (
+                    {transacciones.filter((t) => t.tipo === "ingreso").map((t) => (
                       <tr key={t.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4 text-sm font-data-mono">
                           {new Date(t.fecha).toLocaleDateString("es-MX")}
@@ -263,8 +418,24 @@ export default function CorredorPerfilPage() {
                             {t.estado.charAt(0).toUpperCase() + t.estado.slice(1)}
                           </span>
                         </td>
+                        <td className="px-6 py-4 text-xs font-data-mono text-on-surface-variant">
+                          {formatAplicados(t.id) ?? (
+                            t.estado === "pagado"
+                              ? <span title="Pago sin asignar a mes — verificar aplicar_pago" className="text-error">⚠ —</span>
+                              : <span className="text-outline">—</span>
+                          )}
+                        </td>
                         <td className={`px-6 py-4 text-right font-data-mono ${t.tipo === "ingreso" ? "text-secondary" : "text-tertiary"}`}>
                           {t.tipo === "ingreso" ? "+" : "-"}${Number(t.monto).toFixed(2)}
+                        </td>
+                        <td className="px-3 py-4">
+                          <button
+                            onClick={() => setEditandoTx(t)}
+                            className="p-1 rounded hover:bg-surface-container-low text-outline hover:text-on-surface transition-colors"
+                            title="Editar"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -409,6 +580,7 @@ export default function CorredorPerfilPage() {
           <FormCorredor
             corredor={corredor}
             planes={planes}
+            coaches={coaches}
             onClose={() => setShowForm(false)}
             onSuccess={() => {
               setShowForm(false);
@@ -424,6 +596,17 @@ export default function CorredorPerfilPage() {
             onSuccess={() => {
               setShowNotaModal(false);
               refetchHistorial();
+            }}
+          />
+        )}
+
+        {editandoTx && (
+          <ModalEditarTransaccion
+            transaccion={editandoTx}
+            onClose={() => setEditandoTx(null)}
+            onSuccess={() => {
+              setEditandoTx(null);
+              refetchTransacciones();
             }}
           />
         )}

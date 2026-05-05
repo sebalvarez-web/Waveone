@@ -26,7 +26,7 @@ export function useCorredores({
 
     let query = supabase
       .from("corredores")
-      .select(`*, plan:planes(id, nombre, precio_mensual), entrenador:users(id, nombre, email)`)
+      .select(`*, plan:planes(id, nombre, precio_mensual), entrenador:coaches(id, nombre)`)
       .order("created_at", { ascending: false });
 
     if (search) query = query.ilike("nombre", `%${search}%`);

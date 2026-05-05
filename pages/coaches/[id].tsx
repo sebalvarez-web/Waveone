@@ -1,14 +1,46 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useCoach } from "@/hooks/useCoach";
-import { MESES_ES } from "@/lib/deudas";
+import { useTransacciones } from "@/hooks/useTransacciones";
+import { usePagosAplicados } from "@/hooks/usePagosAplicados";
+import { usePausasAll } from "@/hooks/usePausasAll";
+import { TablaCorredores, type Balance } from "@/components/corredores/TablaCorredores";
+import { calcularDeudas, MESES_ES } from "@/lib/deudas";
 
 export default function CoachDetailPage() {
   const router = useRouter();
   const { id } = router.query as { id: string };
   const { stats, loading } = useCoach(id);
+  const { transacciones } = useTransacciones({ soloIngresoPagado: true });
+  const { pagosAplicados } = usePagosAplicados();
+  const { pausas } = usePausasAll();
+
+  const balances: Record<string, Balance> = useMemo(() => {
+    if (!stats) return {};
+    const result: Record<string, Balance> = {};
+    const deudas = calcularDeudas(stats.corredores, transacciones, pausas, pagosAplicados);
+    const totalPagadoPorCorredor: Record<string, number> = {};
+    for (const t of transacciones) {
+      if (t.tipo !== "ingreso" || t.estado !== "pagado" || !t.corredor_id) continue;
+      totalPagadoPorCorredor[t.corredor_id] = (totalPagadoPorCorredor[t.corredor_id] ?? 0) + Number(t.monto);
+    }
+    for (const d of deudas) {
+      const precio = d.corredor.plan?.precio_mensual ?? 0;
+      const mesesActivos = d.meses.filter(m => m.estado === "pagado" || m.estado === "deuda").length;
+      const totalDevengado = mesesActivos * precio;
+      const totalPagado = totalPagadoPorCorredor[d.corredor.id] ?? 0;
+      const mesesPagados = precio > 0 ? totalPagado / precio : 0;
+      result[d.corredor.id] = {
+        devengados: mesesActivos,
+        pagados: Math.round(mesesPagados * 10) / 10,
+        saldo: totalPagado - totalDevengado,
+      };
+    }
+    return result;
+  }, [stats, transacciones, pausas, pagosAplicados]);
 
   if (loading) {
     return (
@@ -41,7 +73,7 @@ export default function CoachDetailPage() {
             </Link>
             <div>
               <h2 className="text-headline-lg text-on-surface font-headline">{stats.coach.nombre}</h2>
-              <p className="text-body-md text-outline">{stats.coach.email}</p>
+              {stats.coach.telefono && <p className="text-body-md text-outline">{stats.coach.telefono}</p>}
             </div>
           </div>
 
@@ -60,41 +92,12 @@ export default function CoachDetailPage() {
 
           <div>
             <h3 className="text-headline-sm font-headline text-on-surface mb-4">Corredores asignados</h3>
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-surface-container-lowest border-b border-slate-100">
-                    {["NOMBRE", "PLAN", "ESTADO"].map((h) => (
-                      <th key={h} className="px-6 py-4 font-label-caps text-on-surface-variant text-xs">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {stats.corredores.length === 0 && (
-                    <tr>
-                      <td colSpan={3} className="px-6 py-8 text-center text-outline text-sm">
-                        Sin corredores asignados.
-                      </td>
-                    </tr>
-                  )}
-                  {stats.corredores.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 font-semibold text-sm">
-                        <Link href={`/corredores/${c.id}`} className="text-primary hover:underline">{c.nombre}</Link>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-500">{c.plan?.nombre ?? "Sin plan"}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                          c.estado === "activo" ? "bg-secondary/10 text-secondary" :
-                          c.estado === "pausado" ? "bg-primary/10 text-primary" :
-                          "bg-slate-100 text-slate-500"
-                        }`}>{c.estado}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <TablaCorredores
+              corredores={stats.corredores}
+              balances={balances}
+              loading={false}
+              hideEntrenador
+            />
           </div>
 
           {stats.historial.length > 0 && (

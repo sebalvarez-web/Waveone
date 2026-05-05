@@ -6,9 +6,11 @@ import { useCorredores } from "@/hooks/useCorredores";
 import { useTransacciones } from "@/hooks/useTransacciones";
 import { usePagosAplicados } from "@/hooks/usePagosAplicados";
 import { usePausasAll } from "@/hooks/usePausasAll";
+import { useCambiosPlan } from "@/hooks/useCambiosPlan";
+import { usePlanes } from "@/hooks/usePlanes";
 import { calcularDeudas, MESES_ES, type MesEstado } from "@/lib/deudas";
 
-type SortKey = "deuda_desc" | "deuda_asc" | "nombre" | "monto_desc";
+type SortKey = "deuda_desc" | "deuda_asc" | "nombre" | "monto_desc" | "estado";
 
 const CELDA: Record<MesEstado, string> = {
   pagado: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
@@ -53,12 +55,14 @@ export default function DeudasPage() {
   const { transacciones, loading: loadingT } = useTransacciones({ soloIngresoPagado: true });
   const { pagosAplicados } = usePagosAplicados();
   const { pausas } = usePausasAll();
+  const { cambios: cambiosPlan } = useCambiosPlan();
+  const { planes } = usePlanes();
   const [soloConDeuda, setSoloConDeuda] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("deuda_desc");
 
   const deudas = useMemo(
-    () => calcularDeudas(corredores, transacciones, pausas, pagosAplicados),
-    [corredores, transacciones, pausas, pagosAplicados]
+    () => calcularDeudas(corredores, transacciones, pausas, pagosAplicados, cambiosPlan, planes),
+    [corredores, transacciones, pausas, pagosAplicados, cambiosPlan, planes]
   );
 
   const filtradas = useMemo(() => {
@@ -81,6 +85,14 @@ export default function DeudasPage() {
       case "monto_desc":
         sorted.sort((a, b) => b.totalDeuda - a.totalDeuda);
         break;
+      case "estado": {
+        const ORDER: Record<string, number> = { activo: 0, pausado: 1, inactivo: 2 };
+        sorted.sort((a, b) =>
+          (ORDER[a.corredor.estado] ?? 9) - (ORDER[b.corredor.estado] ?? 9) ||
+          b.mesesDeudaCount - a.mesesDeudaCount
+        );
+        break;
+      }
     }
     return sorted;
   }, [deudas, search, soloConDeuda, sortKey]);
@@ -193,6 +205,7 @@ export default function DeudasPage() {
               <option value="deuda_asc">Menos meses adeudados</option>
               <option value="monto_desc">Mayor monto adeudado</option>
               <option value="nombre">Nombre A-Z</option>
+              <option value="estado">Status (activo → pausado → inactivo)</option>
             </select>
 
             <div className="ml-auto hidden md:flex items-center gap-3 text-[11px] text-outline">
