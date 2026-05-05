@@ -159,9 +159,9 @@ export default function CorredorPerfilPage() {
       arr.push({ año: pa.año, mes: pa.mes });
       map.set(pa.transaccion_id, arr);
     }
-    for (const arr of map.values()) {
+    map.forEach((arr) => {
       arr.sort((a, b) => a.año - b.año || a.mes - b.mes);
-    }
+    });
     return map;
   }, [pagosAplicados]);
 

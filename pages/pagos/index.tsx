@@ -262,10 +262,10 @@ export default function PagosPage() {
       grouped.set(pa.transaccion_id, arr);
     }
     const out: AplicadosMap = new Map();
-    for (const [txId, arr] of grouped) {
+    grouped.forEach((arr, txId) => {
       arr.sort((a, b) => a.año - b.año || a.mes - b.mes);
       out.set(txId, arr.map(m => `${MESES_ES[m.mes - 1]} '${String(m.año).slice(-2)}`).join(", "));
-    }
+    });
     return out;
   }, [pagosAplicados]);
   const [tab, setTab] = useState<Tab>("todos");
