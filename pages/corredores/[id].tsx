@@ -421,7 +421,7 @@ export default function CorredorPerfilPage() {
                         <td className="px-6 py-4 text-xs font-data-mono text-on-surface-variant">
                           {formatAplicados(t.id) ?? (
                             t.estado === "pagado"
-                              ? <span title="Pago sin asignar a mes — verificar aplicar_pago" className="text-error">⚠ —</span>
+                              ? <span title="Pago no aplicado a ningún mes — sobrepago, corredor inactivo, o plan sin precio" className="text-on-surface-variant italic">Exceso</span>
                               : <span className="text-outline">—</span>
                           )}
                         </td>

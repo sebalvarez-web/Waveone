@@ -165,7 +165,7 @@ function TablaPagos({ rows, loading, onEdit, aplicados }: { rows: Transaccion[];
               <td className="px-5 py-3.5 font-mono text-[11px] text-on-surface-variant whitespace-nowrap">
                 {aplicados.get(t.id) ?? (
                   t.estado === "pagado" && t.corredor_id
-                    ? <span title="Pago sin asignar a mes — verificar aplicar_pago" className="text-error">⚠ —</span>
+                    ? <span title="Pago no aplicado a ningún mes — sobrepago, corredor inactivo, o plan sin precio" className="text-on-surface-variant italic">Exceso</span>
                     : <span className="text-outline">—</span>
                 )}
               </td>
