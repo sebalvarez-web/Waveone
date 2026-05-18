@@ -109,17 +109,24 @@ export function GraficasFinanzas({ transacciones }: { transacciones: Transaccion
           <p className="text-[10px] font-bold tracking-wider text-on-surface-variant">INGRESOS VS GASTOS</p>
           <p className="text-xs text-outline mt-0.5">Últimos 3 meses</p>
         </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={mensual} barCategoryGap="30%" barGap={4}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E9E9E2" vertical={false} />
-            <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#94A0B5" }} axisLine={false} tickLine={false} />
-            <YAxis tickFormatter={(v) => "$" + (v >= 1000 ? (v / 1000).toFixed(0) + "k" : v)} tick={{ fontSize: 11, fill: "#94A0B5" }} axisLine={false} tickLine={false} width={48} />
-            <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(0,0,0,0.03)" }} />
-            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-            <Bar dataKey="ingresos" name="Ingresos" fill={EMERALD} radius={[4, 4, 0, 0]} />
-            <Bar dataKey="gastos"   name="Gastos"   fill={CORAL}   radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        {mensual.length === 0 || mensual.every(m => m.ingresos === 0 && m.gastos === 0) ? (
+          <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-outline">
+            <span className="material-symbols-outlined text-3xl">bar_chart</span>
+            <p className="text-sm">Sin datos en los últimos 3 meses.</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={mensual} barCategoryGap="30%" barGap={4}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E9E9E2" vertical={false} />
+              <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#94A0B5" }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={(v) => "$" + (v >= 1000 ? (v / 1000).toFixed(0) + "k" : v)} tick={{ fontSize: 11, fill: "#94A0B5" }} axisLine={false} tickLine={false} width={48} />
+              <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(0,0,0,0.03)" }} />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+              <Bar dataKey="ingresos" name="Ingresos" fill={EMERALD} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="gastos"   name="Gastos"   fill={CORAL}   radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Dona: desglose por método */}
