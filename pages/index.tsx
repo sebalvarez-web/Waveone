@@ -58,7 +58,6 @@ export default function DashboardPage() {
             <TarjetaMetrica
               titulo="CORREDORES ACTIVOS"
               valor={String(metricas.totalCorredoresActivos)}
-              tendencia="+12% mes anterior"
               icono="directions_run"
               colorIcono="text-accent"
             />
