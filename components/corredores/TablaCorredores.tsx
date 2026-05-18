@@ -114,7 +114,7 @@ export function TablaCorredores({ corredores, balances, loading, onEdit, onDelet
                           value={c.entrenador?.id ?? ""}
                           onChange={(e) => onChangeCoach(c.id, e.target.value || null)}
                           onClick={(e) => e.stopPropagation()}
-                          className="border border-outline-variant/60 rounded-md px-2 py-1 text-xs bg-white hover:border-outline focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 cursor-pointer max-w-[160px]"
+                          className="border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs font-semibold text-on-surface-variant bg-white hover:border-outline focus:outline-none focus:ring-4 focus:ring-accent/15 cursor-pointer max-w-[160px] transition-all"
                           aria-label={`Cambiar entrenador de ${c.nombre}`}
                         >
                           <option value="">— Sin asignar —</option>
