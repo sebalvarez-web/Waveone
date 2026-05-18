@@ -202,14 +202,7 @@ function KpiCard({ label, total, count, sub, color, highlight }: {
         border: highlight ? `1.5px solid ${color}50` : "1px solid rgba(0,0,0,0.07)",
         boxShadow: highlight ? `0 4px 20px ${color}18` : undefined,
       }}>
-      {highlight && (
-        <div style={{
-          position: "absolute", top: -60, right: -60,
-          width: 160, height: 160, borderRadius: "50%",
-          background: `radial-gradient(ellipse, ${color}10 0%, transparent 70%)`,
-          pointerEvents: "none",
-        }} />
-      )}
+      {/* Decorative blob removed (F-006) — keep border + shadow accent only. */}
       <div className="flex items-center gap-2 mb-3">
         <span style={{
           width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0,
