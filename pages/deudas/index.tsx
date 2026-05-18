@@ -13,10 +13,10 @@ import { calcularDeudas, MESES_ES, type MesEstado } from "@/lib/deudas";
 type SortKey = "deuda_desc" | "deuda_asc" | "nombre" | "monto_desc" | "estado";
 
 const CELDA: Record<MesEstado, string> = {
-  pagado: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
-  deuda:  "bg-red-50 text-red-700 ring-1 ring-red-200",
-  pausa:  "bg-slate-100 text-slate-500 ring-1 ring-slate-200",
-  futuro: "bg-slate-50 text-slate-300 ring-1 ring-slate-100",
+  pagado: "bg-secondary-container text-on-secondary-container ring-1 ring-secondary/20",
+  deuda:  "bg-error-container text-on-error-container ring-1 ring-error/20",
+  pausa:  "bg-surface-container-high text-on-surface-variant ring-1 ring-outline-variant",
+  futuro: "bg-surface-container-low text-outline ring-1 ring-outline-variant/60",
 };
 
 const CELDA_ICON: Record<MesEstado, string> = {
@@ -120,9 +120,9 @@ export default function DeudasPage() {
               Historial mensual de pagos por corredor — datos en vivo.
             </p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 ring-1 ring-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-semibold text-emerald-700">En vivo</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary-container ring-1 ring-secondary/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
+            <span className="text-xs font-semibold text-on-secondary-container">En vivo</span>
           </div>
         </div>
 
@@ -185,8 +185,8 @@ export default function DeudasPage() {
               onClick={() => setSoloConDeuda(!soloConDeuda)}
               className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                 soloConDeuda
-                  ? "bg-red-50 text-red-700 ring-1 ring-red-200 hover:bg-red-100"
-                  : "bg-white text-on-surface-variant ring-1 ring-slate-200 hover:bg-slate-50"
+                  ? "bg-error-container text-on-error-container ring-1 ring-error/20 hover:bg-error/15"
+                  : "bg-white text-on-surface-variant ring-1 ring-outline-variant hover:bg-surface-container-low"
               }`}
             >
               <span className="material-symbols-outlined text-sm">filter_alt</span>
@@ -209,10 +209,10 @@ export default function DeudasPage() {
             </select>
 
             <div className="ml-auto hidden md:flex items-center gap-3 text-[11px] text-outline">
-              <Legend color="bg-emerald-100 ring-emerald-200" label="Pagado" />
-              <Legend color="bg-red-100 ring-red-200" label="Adeudado" />
-              <Legend color="bg-slate-100 ring-slate-200" label="Pausa" />
-              <Legend color="bg-slate-50 ring-slate-100" label="Pendiente" />
+              <Legend color="bg-secondary-container ring-secondary/20" label="Pagado" />
+              <Legend color="bg-error-container ring-error/20" label="Adeudado" />
+              <Legend color="bg-surface-container-high ring-outline-variant" label="Pausa" />
+              <Legend color="bg-surface-container-low ring-outline-variant/60" label="Pendiente" />
             </div>
           </div>
 
@@ -284,7 +284,7 @@ export default function DeudasPage() {
                                 {corredor.plan?.nombre ?? "Sin plan"}
                               </span>
                               {mesesDeudaCount > 0 && (
-                                <span className="inline-flex items-center text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-bold ring-1 ring-red-200">
+                                <span className="inline-flex items-center text-[10px] bg-error-container text-on-error-container px-1.5 py-0.5 rounded-full font-bold ring-1 ring-error/20">
                                   {mesesDeudaCount}m
                                 </span>
                               )}
@@ -326,9 +326,9 @@ export default function DeudasPage() {
                       })}
                       <td className="px-4 py-3 text-right font-semibold">
                         {totalDeuda > 0 ? (
-                          <span className="text-red-600">${fmt(totalDeuda)}</span>
+                          <span className="text-error">${fmt(totalDeuda)}</span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-emerald-700 text-xs font-semibold">
+                          <span className="inline-flex items-center gap-1 text-secondary text-xs font-semibold">
                             <span className="material-symbols-outlined text-sm">check_circle</span>
                             Al corriente
                           </span>
@@ -371,11 +371,11 @@ interface KpiCardProps {
 
 function KpiCard({ label, value, icon, tone, sub, loading, progress }: KpiCardProps) {
   const tones = {
-    danger:  { bg: "bg-red-50",      ring: "ring-red-100",      text: "text-red-700",     icon: "text-red-500",     accent: "bg-red-500" },
-    warning: { bg: "bg-amber-50",    ring: "ring-amber-100",    text: "text-amber-700",   icon: "text-amber-500",   accent: "bg-amber-500" },
-    success: { bg: "bg-emerald-50",  ring: "ring-emerald-100",  text: "text-emerald-700", icon: "text-emerald-500", accent: "bg-emerald-500" },
-    neutral: { bg: "bg-white",       ring: "ring-slate-200",    text: "text-on-surface",  icon: "text-outline",     accent: "bg-slate-400" },
-    info:    { bg: "bg-blue-50",     ring: "ring-blue-100",     text: "text-blue-700",    icon: "text-blue-500",    accent: "bg-blue-500" },
+    danger:  { bg: "bg-error-container",     ring: "ring-error/15",     text: "text-on-error-container",     icon: "text-error",     accent: "bg-error" },
+    warning: { bg: "bg-tertiary-container",  ring: "ring-tertiary/15",  text: "text-on-tertiary-container",  icon: "text-tertiary",  accent: "bg-tertiary" },
+    success: { bg: "bg-secondary-container", ring: "ring-secondary/15", text: "text-on-secondary-container", icon: "text-secondary", accent: "bg-secondary" },
+    neutral: { bg: "bg-surface-container-lowest", ring: "ring-outline-variant", text: "text-on-surface", icon: "text-outline", accent: "bg-outline" },
+    info:    { bg: "bg-info-container",      ring: "ring-info/15",      text: "text-info",                   icon: "text-info",      accent: "bg-info" },
   }[tone];
 
   if (loading) {
