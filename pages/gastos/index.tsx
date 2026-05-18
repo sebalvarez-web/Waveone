@@ -58,7 +58,7 @@ function TablaGastos({ rows, loading, onEdit }: { rows: Transaccion[]; loading: 
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">PAGADO A</th>
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">CATEGORÍA</th>
             <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant">ESTADO</th>
-            <th className="px-5 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant text-right">MONTO</th>
+            <th className="px-4 py-3 text-[10px] font-bold tracking-wider text-on-surface-variant text-right min-w-[110px] whitespace-nowrap">MONTO</th>
             <th className="px-5 py-3 w-10" />
           </tr>
         </thead>
@@ -68,8 +68,8 @@ function TablaGastos({ rows, loading, onEdit }: { rows: Transaccion[]; loading: 
               <td className="px-5 py-3.5 text-on-surface-variant whitespace-nowrap font-mono text-xs">
                 {new Date(t.fecha).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
               </td>
-              <td className="px-5 py-3.5 text-on-surface font-semibold max-w-xs truncate">{t.descripcion}</td>
-              <td className="px-5 py-3.5 text-on-surface-variant max-w-[200px] truncate">
+              <td className="px-5 py-3.5 text-on-surface font-semibold max-w-[220px] truncate" title={t.descripcion}>{t.descripcion}</td>
+              <td className="px-5 py-3.5 text-on-surface-variant max-w-[160px] truncate" title={t.pagado_a || ''}>
                 {t.pagado_a || <span className="text-outline">—</span>}
               </td>
               <td className="px-5 py-3.5">
@@ -78,7 +78,7 @@ function TablaGastos({ rows, loading, onEdit }: { rows: Transaccion[]; loading: 
                 </span>
               </td>
               <td className="px-5 py-3.5"><BadgeEstado estado={t.estado} /></td>
-              <td className="px-5 py-3.5 text-right font-mono text-error font-semibold">
+              <td className="px-4 py-3.5 text-right font-mono text-error font-semibold whitespace-nowrap">
                 −${fmt(Number(t.monto))}
               </td>
               <td className="px-3 py-3.5">
