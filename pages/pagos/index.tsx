@@ -344,8 +344,8 @@ export default function PagosPage() {
         {/* Header */}
         <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <p className="text-label-caps mb-2" style={{ color: A.coral }}>
-              WAVE ONE — FINANZAS
+            <p className="text-label-caps text-on-surface-variant mb-2">
+              FINANZAS
             </p>
             <h2 className="text-headline-lg text-on-background font-headline">Pagos</h2>
             <p className="text-body-md text-on-surface-variant mt-1">
