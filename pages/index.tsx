@@ -112,7 +112,7 @@ export default function DashboardPage() {
             </div>
             <Link
               href="/finanzas"
-              className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-accent-text hover:underline px-2 py-2 -mx-2 -my-2 rounded-md min-h-[44px]"
             >
               Ver todas
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>

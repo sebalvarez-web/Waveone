@@ -17,7 +17,8 @@ const config: Config = {
         "on-primary-container": "#FFFFFF",
 
         // Accent (athletic/energetic)
-        accent: "#FF5E3A",             // Coral — CTA / brand spark
+        accent: "#FF5E3A",             // Coral — large CTA / button bg only (3.02:1 on white — fails AA for body)
+        "accent-text": "#D14416",      // Darker coral for small text — passes WCAG AA (4.6:1 on white)
         "accent-soft": "#FFE6DD",
         "on-accent": "#FFFFFF",
 
