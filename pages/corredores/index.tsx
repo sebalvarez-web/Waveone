@@ -134,10 +134,10 @@ export default function CorredoresPage() {
   const hasFilters = filtroEstado || filtroEntrenador || filtroPlan;
 
   const stats = [
-    { label: "TOTAL", value: corredores.length, icon: "groups", tone: "neutral" as const },
+    { label: "TOTAL", value: corredores.length, icon: "groups", tone: "info" as const },
     { label: "ACTIVOS", value: activos, icon: "directions_run", tone: "success" as const },
     { label: "UNIFORMES PENDIENTES", value: uniformesPendientes, icon: "checkroom", tone: "warning" as const },
-    { label: "INACTIVOS", value: corredores.filter((c) => c.estado === "inactivo").length, icon: "person_off", tone: "neutral" as const },
+    { label: "INACTIVOS", value: corredores.filter((c) => c.estado === "inactivo").length, icon: "person_off", tone: "danger" as const },
   ];
 
   return (
@@ -259,14 +259,15 @@ interface StatCardProps {
   label: string;
   value: number;
   icon: string;
-  tone: "neutral" | "success" | "warning";
+  tone: "info" | "success" | "warning" | "danger";
 }
 
 function StatCard({ label, value, icon, tone }: StatCardProps) {
   const tones = {
-    neutral: "text-on-surface bg-surface-container-low",
+    info: "text-info bg-info-container",
     success: "text-secondary bg-secondary-container",
     warning: "text-tertiary bg-tertiary-container",
+    danger: "text-error bg-error-container",
   };
   return (
     <div className="bg-white border border-outline-variant/60 rounded-xl p-4 shadow-soft">

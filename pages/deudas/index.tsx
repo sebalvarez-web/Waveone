@@ -148,7 +148,7 @@ export default function DeudasPage() {
             label="MESES ADEUDADOS"
             value={String(totalMesesAdeudados)}
             icon="event_busy"
-            tone="neutral"
+            tone="info"
             sub="acumulados"
             loading={loading}
           />
@@ -363,7 +363,7 @@ interface KpiCardProps {
   label: string;
   value: string;
   icon: string;
-  tone: "danger" | "warning" | "success" | "neutral";
+  tone: "danger" | "warning" | "success" | "neutral" | "info";
   sub?: string;
   loading?: boolean;
   progress?: number;
@@ -375,6 +375,7 @@ function KpiCard({ label, value, icon, tone, sub, loading, progress }: KpiCardPr
     warning: { bg: "bg-amber-50",    ring: "ring-amber-100",    text: "text-amber-700",   icon: "text-amber-500",   accent: "bg-amber-500" },
     success: { bg: "bg-emerald-50",  ring: "ring-emerald-100",  text: "text-emerald-700", icon: "text-emerald-500", accent: "bg-emerald-500" },
     neutral: { bg: "bg-white",       ring: "ring-slate-200",    text: "text-on-surface",  icon: "text-outline",     accent: "bg-slate-400" },
+    info:    { bg: "bg-blue-50",     ring: "ring-blue-100",     text: "text-blue-700",    icon: "text-blue-500",    accent: "bg-blue-500" },
   }[tone];
 
   if (loading) {
