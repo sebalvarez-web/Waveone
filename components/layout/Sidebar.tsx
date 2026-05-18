@@ -66,7 +66,7 @@ export function Sidebar({
             <div className="min-w-0 leading-none">
               <div className="flex items-baseline gap-1.5">
                 <span className="text-[18px] font-headline font-extrabold text-white tracking-tight leading-none">WAVE</span>
-                <span className="text-[18px] font-headline font-extrabold leading-none" style={{ color: "#C8FF00" }}>ONE</span>
+                <span className="text-[18px] font-headline font-extrabold leading-none text-lime">ONE</span>
               </div>
               <p className="text-[9px] font-bold tracking-[0.18em] mt-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
                 DASHBOARD
@@ -163,8 +163,8 @@ function NavLink({ href, icon, label, active, collapsed, onMobileClose, badge }:
           : "text-white/60 hover:text-white hover:bg-white/[0.05]"
       }`}
       style={active ? {
-        background: "rgba(200,255,0,0.12)",
-        boxShadow: "inset 3px 0 0 #C8FF00",
+        background: "color-mix(in srgb, var(--lime) 12%, transparent)",
+        boxShadow: "inset 3px 0 0 var(--lime)",
       } : undefined}
     >
       <span className={`material-symbols-outlined text-[20px] ${active ? "fill" : ""}`}>{icon}</span>
@@ -172,12 +172,12 @@ function NavLink({ href, icon, label, active, collapsed, onMobileClose, badge }:
         <span className={`text-sm ml-3 ${active ? "font-semibold" : "font-medium"}`}>{label}</span>
       )}
       {!collapsed && badge !== undefined && (
-        <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full text-primary" style={{ background: "#C8FF00" }}>
+        <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full text-primary bg-lime">
           {badge}
         </span>
       )}
       {collapsed && badge !== undefined && (
-        <span className="absolute top-1 right-1 w-2 h-2 rounded-full ring-2 ring-primary" style={{ background: "#C8FF00" }} />
+        <span className="absolute top-1 right-1 w-2 h-2 rounded-full ring-2 ring-primary bg-lime" />
       )}
       {collapsed && (
         <span className="absolute left-full ml-3 px-2.5 py-1.5 bg-primary text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-pop font-medium">

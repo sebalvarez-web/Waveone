@@ -5,6 +5,10 @@
 :root {
   --background: #F9F9F6;
   --foreground: #0B1220;
+  /* Token mirror for inline-style usage (keep in sync with tailwind.config.ts) */
+  --lime: #C8FF00;
+  --lime-dark: #9CB800;
+  --accent: #FF5E3A;
 }
 
 * {

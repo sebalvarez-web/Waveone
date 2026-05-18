@@ -4,6 +4,9 @@ import Head from "next/head";
 import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase-browser";
 
+// Mirror of `lime` token in tailwind.config.ts and `--lime` CSS var in styles/globals.css.
+// Kept as hex for JS string-concat consumers (alpha suffix `${ACCENT}20`).
+// Update all three when changing the brand color.
 const ACCENT = "#C8FF00";
 const INK    = "#0B1220";
 

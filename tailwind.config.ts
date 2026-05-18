@@ -22,6 +22,11 @@ const config: Config = {
         "accent-soft": "#FFE6DD",
         "on-accent": "#FFFFFF",
 
+        // Lime — secondary brand spark (logo "ONE", sidebar accents, login)
+        lime: "#C8FF00",
+        "lime-dark": "#9CB800",        // Lime variant for text-on-white usage
+        "on-lime": "#0B1220",          // Dark text on lime bg (lime is bright — needs dark fg)
+
         // Semantic
         secondary: "#059669",          // Emerald success
         "on-secondary": "#FFFFFF",

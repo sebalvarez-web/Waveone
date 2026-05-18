@@ -232,7 +232,7 @@ export function ModalEditarTransaccion({ transaccion: tx, onClose, onSuccess }: 
               onClick={handleSave}
               disabled={saving || deleting}
               className="px-5 py-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50"
-              style={{ background: "#C8FF00", color: "#1a1a1a" }}
+              style={{ background: "var(--lime)", color: "#1a1a1a" }}
             >
               {saving ? "Guardando..." : "Guardar cambios"}
             </button>

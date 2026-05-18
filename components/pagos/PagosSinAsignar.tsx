@@ -67,6 +67,8 @@ function extractInfo(pago: PagoSinAsignar): {
   return { id: null, email: null, nombre: null, concepto: null, linkUrl: null };
 }
 
+// Mirror of `lime` token in tailwind.config.ts (kept as hex for JS string-concat consumers
+// like `${ACCENT}50` alpha-suffixing). Update both when changing the brand color.
 const ACCENT = "#C8FF00";
 
 function CorredorSearch({
