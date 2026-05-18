@@ -167,7 +167,7 @@ export function FormGasto({ onSuccess }: FormGastoProps) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 bg-tertiary text-white rounded-lg font-semibold hover:opacity-90 transition-all disabled:opacity-60 text-sm"
+        className="w-full py-3 bg-primary text-on-primary rounded-lg font-semibold hover:bg-primary-fixed transition-all disabled:opacity-60 text-sm shadow-soft"
       >
         {loading ? "Enviando..." : "Enviar Gasto"}
       </button>
